@@ -173,6 +173,12 @@
     "engagementBody": "Every engagement starts with a free 20-minute introductory call to scope the work. From there, I propose a fixed-price or hourly engagement based on what fits. I work in English and Arabic.",
     "cta": "Book an intro call"
   },
+  "ticker": {
+    "aiDetectorMsg": "Altaan AI Detector is live — try it on your own text",
+    "latestRepoMsg": "Latest on GitHub: {name}",
+    "appsMsg": "{count} iOS apps now live on the App Store",
+    "youtubeMsg": "New videos on YouTube — subscribe to the channel"
+  },
   "numbers": {
     "eyebrow": "By the numbers",
     "title": "By the Numbers",

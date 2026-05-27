@@ -12,6 +12,7 @@ export const siteConfig = {
       "https://www.instagram.com/dr.maytham.aljubori?igsh=Y3YxaHdzdmh1am1u&utm_source=qr",
     linkedin: "https://iq.linkedin.com/in/maytham-al-jubori-a06929154",
     github: "https://github.com/Maytham-altaan",
+    youtube: "https://www.youtube.com/@maythamaljubori6464",
   },
   githubUsername: "Maytham-altaan",
   products: {

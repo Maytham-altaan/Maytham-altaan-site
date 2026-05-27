@@ -6,6 +6,8 @@ import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { NewsTicker } from "@/components/NewsTicker";
+import { getTickerItems } from "@/lib/ticker";
 import "../globals.css";
 
 const inter = Inter({
@@ -54,6 +56,7 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
 
   const dir = locale === "ar" ? "rtl" : "ltr";
+  const tickerItems = await getTickerItems(locale);
 
   return (
     <html
@@ -63,6 +66,7 @@ export default async function LocaleLayout({
     >
       <body className="min-h-full flex flex-col antialiased">
         <NextIntlClientProvider>
+          <NewsTicker items={tickerItems} />
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
