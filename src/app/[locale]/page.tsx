@@ -91,11 +91,7 @@ export default async function HomePage({
         </Container>
       </section>
 
-      <section className="border-b border-[var(--color-border)] py-6">
-        <Container>
-          <VisitorsBar />
-        </Container>
-      </section>
+      <VisitorsBar />
 
       <section className="py-20 md:py-24">
         <Container>

@@ -3,10 +3,14 @@
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Users, Eye } from "lucide-react";
+import { Container } from "@/components/Container";
 
 const NAMESPACE = "maytham-altaan-com";
 const KEY = "visits";
 const SESSION_KEY = "altaan_visit_counted";
+// Hide the bar until we have meaningful traffic — showing "5 visitors" on
+// a personal site looks worse than not showing anything.
+const MIN_VISIBLE = 50;
 
 type CounterResponse = { value: number };
 
@@ -69,10 +73,15 @@ export function VisitorsBar() {
     };
   }, []);
 
+  // Render nothing while loading, on fetch error, or below the minimum.
+  if (count === null || count < MIN_VISIBLE) return null;
+
   const formatter = new Intl.NumberFormat(locale);
-  const display = count === null ? "…" : formatter.format(count);
+  const display = formatter.format(count);
 
   return (
+    <section className="border-b border-[var(--color-border)] py-6">
+      <Container>
     <div
       className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 rounded-2xl border border-[var(--color-border)] bg-[var(--color-subtle)]/60 px-5 py-3 text-sm text-[var(--color-foreground)]/85"
       aria-live="polite"
@@ -101,5 +110,7 @@ export function VisitorsBar() {
         <span>{t("note")}</span>
       </div>
     </div>
+      </Container>
+    </section>
   );
 }
