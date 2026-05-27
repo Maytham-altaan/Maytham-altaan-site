@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { Link } from "@/i18n/navigation";
-import { Sparkles, Github, AppWindow, Youtube } from "lucide-react";
+import { Sparkles, GitBranch, AppWindow, PlayCircle } from "lucide-react";
 
 type IconKey = "ai" | "github" | "apps" | "youtube";
 const ICONS: Record<IconKey, typeof Sparkles> = {
   ai: Sparkles,
-  github: Github,
+  github: GitBranch,
   apps: AppWindow,
-  youtube: Youtube,
+  youtube: PlayCircle,
 };
 
 export type TickerItem = {

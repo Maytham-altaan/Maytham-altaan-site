@@ -6,9 +6,8 @@ import {
   Globe2,
   ShieldCheck,
   Sparkles,
-  ExternalLink,
 } from "lucide-react";
-import { siteConfig } from "@/lib/site-config";
+import Detector from "@/components/altaan-detector/Detector.jsx";
 
 export async function generateMetadata({
   params,
@@ -68,30 +67,10 @@ export default async function AiDetectorPage({
         </Container>
       </section>
 
-      <section className="py-6 md:py-10">
-        <Container>
-          <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] shadow-sm">
-            <iframe
-              src={siteConfig.products.aiDetector}
-              title={t("title")}
-              className="block h-[80vh] min-h-[640px] w-full border-0"
-              loading="lazy"
-              allow="clipboard-read; clipboard-write"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
-          </div>
-          <div className="mt-3 flex items-center justify-end">
-            <a
-              href={siteConfig.products.aiDetector}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-muted)] hover:text-[var(--color-brand-700)]"
-            >
-              {t("openInNewTab")}
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          </div>
-        </Container>
+      {/* Native detector — runs in the browser, calls /api/detector/* which
+          Next.js rewrites to https://detector.maytham-altaan.com/api/* */}
+      <section className="bg-white py-8 md:py-12">
+        <Detector />
       </section>
 
       <section className="border-t border-[var(--color-border)] py-16 md:py-20">

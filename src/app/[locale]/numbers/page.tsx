@@ -9,7 +9,6 @@ import {
   GitBranch,
   Star,
   FileText,
-  Github,
   ExternalLink,
   Clock,
 } from "lucide-react";
@@ -168,7 +167,7 @@ export default async function NumbersPage({
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-brand-100)] text-[var(--color-brand-700)]">
-                    <Github className="h-5 w-5" />
+                    <GitBranch className="h-5 w-5" />
                   </div>
                   <div>
                     <div className="text-xs font-semibold uppercase tracking-wider text-[var(--color-brand-700)]">
@@ -224,7 +223,7 @@ export default async function NumbersPage({
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 font-medium hover:text-[var(--color-brand-700)]"
             >
-              <Github className="h-3.5 w-3.5" />
+              <GitBranch className="h-3.5 w-3.5" />
               {t("viewProfile")}
               <ExternalLink className="h-3 w-3" />
             </a>
