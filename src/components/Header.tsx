@@ -14,6 +14,7 @@ const NAV_LINKS = [
   { href: "/ai-detector", key: "aiDetector" },
   { href: "/work", key: "work" },
   { href: "/services", key: "services" },
+  { href: "/numbers", key: "numbers" },
   { href: "/contact", key: "contact" },
 ] as const;
 

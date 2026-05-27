@@ -11,6 +11,7 @@
     "aiDetector": "AI Detector",
     "work": "Work",
     "services": "Services",
+    "numbers": "Numbers",
     "contact": "Contact",
     "menu": "Menu",
     "close": "Close",
@@ -171,6 +172,22 @@
     "engagementTitle": "How engagements work",
     "engagementBody": "Every engagement starts with a free 20-minute introductory call to scope the work. From there, I propose a fixed-price or hourly engagement based on what fits. I work in English and Arabic.",
     "cta": "Book an intro call"
+  },
+  "numbers": {
+    "eyebrow": "By the numbers",
+    "title": "By the Numbers",
+    "subtitle": "A live snapshot of what I've shipped, taught, and shared — refreshed automatically from public sources.",
+    "yearsPharmacyLabel": "Years practicing clinical pharmacy",
+    "appsLabel": "iOS apps on the App Store",
+    "toolsLabel": "Live AI tools",
+    "reposLabel": "Public GitHub repositories",
+    "starsLabel": "GitHub stars earned",
+    "manuscriptsLabel": "Peer-reviewed manuscripts",
+    "liveBadge": "Live",
+    "latestRepoEyebrow": "Latest repository",
+    "viewOnGithub": "View on GitHub",
+    "viewProfile": "View profile",
+    "updatedNote": "Live numbers refresh every hour."
   },
   "contact": {
     "eyebrow": "Contact",
