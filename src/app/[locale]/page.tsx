@@ -2,6 +2,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Container } from "@/components/Container";
 import { ProfilePhoto } from "@/components/ProfilePhoto";
+import { VisitorsBar } from "@/components/VisitorsBar";
 import {
   GraduationCap,
   Sparkles,
@@ -87,6 +88,12 @@ export default async function HomePage({
               </Link>
             </div>
           </div>
+        </Container>
+      </section>
+
+      <section className="border-b border-[var(--color-border)] py-6">
+        <Container>
+          <VisitorsBar />
         </Container>
       </section>
 
