@@ -177,6 +177,19 @@
     "totalLabel": "Total visitors",
     "note": "Live count — updates with every visit"
   },
+  "appsShowcase": {
+    "eyebrow": "Apps I've shipped",
+    "title": "Three apps live on the App Store",
+    "subtitle": "Tap any card to open the App Store listing.",
+    "liveNote": "Live from the App Store",
+    "openOnAppStore": "Open on the App Store"
+  },
+  "youtubeShowcase": {
+    "eyebrow": "On YouTube",
+    "title": "Latest videos",
+    "subtitle": "Tutorials, walkthroughs, and clinical-pharmacy notes.",
+    "viewChannel": "View channel"
+  },
   "ticker": {
     "aiDetectorMsg": "Altaan AI Detector is live — try it on your own text",
     "latestRepoMsg": "Latest on GitHub: {name}",

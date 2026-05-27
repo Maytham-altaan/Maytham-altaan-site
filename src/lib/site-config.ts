@@ -21,20 +21,24 @@ export const siteConfig = {
   apps: [
     {
       key: "cinemati",
+      appStoreId: "6762375503",
       url: "https://apps.apple.com/us/app/%D8%B3%D9%8A%D9%86%D9%85%D8%A7%D8%A6%D9%8A-cinemati/id6762375503",
       platform: "iOS",
     },
     {
       key: "calorie",
+      appStoreId: "6763806264",
       url: "https://apps.apple.com/us/app/%D8%AD%D8%A7%D8%B3%D8%A8%D8%A9-%D8%A7%D9%84%D8%B3%D8%B9%D8%B1%D8%A7%D8%AA-%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9/id6763806264",
       platform: "iOS",
     },
     {
       key: "residipok",
+      appStoreId: "6768218005",
       url: "https://apps.apple.com/us/app/residipok/id6768218005",
       platform: "iOS",
     },
   ],
+  youtubeChannelId: "UChRDme3tjanA3igj_Gcnp_g",
 } as const;
 
 export type AppEntry = (typeof siteConfig.apps)[number];

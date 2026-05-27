@@ -3,6 +3,8 @@ import { Link } from "@/i18n/navigation";
 import { Container } from "@/components/Container";
 import { ProfilePhoto } from "@/components/ProfilePhoto";
 import { VisitorsBar } from "@/components/VisitorsBar";
+import { AppsShowcase } from "@/components/AppsShowcase";
+import { YouTubeShowcase } from "@/components/YouTubeShowcase";
 import {
   GraduationCap,
   Sparkles,
@@ -142,6 +144,10 @@ export default async function HomePage({
           </div>
         </Container>
       </section>
+
+      <AppsShowcase locale={locale} />
+
+      <YouTubeShowcase locale={locale} />
 
       <section className="border-y border-[var(--color-border)] bg-[var(--color-subtle)]/40 py-20 md:py-24">
         <Container>
