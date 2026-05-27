@@ -38,7 +38,7 @@ export default async function AiDetectorPage({
 
   return (
     <>
-      <section className="relative overflow-hidden border-b border-[var(--color-border)] py-16 md:py-24">
+      <section className="relative overflow-hidden border-b border-[var(--color-border)] pt-12 pb-8 md:pt-16 md:pb-10">
         <div
           className="pointer-events-none absolute inset-0 -z-10"
           aria-hidden
@@ -59,30 +59,48 @@ export default async function AiDetectorPage({
               {t("liveBadge")}
             </div>
           </div>
-          <h1 className="mt-5 max-w-3xl text-balance text-4xl font-semibold tracking-tight md:text-5xl md:leading-[1.1]">
+          <h1 className="mt-4 max-w-3xl text-balance text-3xl font-semibold tracking-tight md:text-4xl md:leading-[1.15]">
             {t("title")}
           </h1>
-          <p className="mt-5 max-w-2xl text-lg text-[var(--color-muted)]">
+          <p className="mt-3 max-w-2xl text-base text-[var(--color-muted)] md:text-lg">
             {t("subtitle")}
           </p>
-          <p className="mt-6 max-w-3xl text-pretty text-[var(--color-foreground)]/85 md:text-lg">
-            {t("intro")}
-          </p>
-          <a
-            href={siteConfig.products.aiDetector}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--color-accent-500)] px-6 py-3 text-sm font-semibold text-[#451a03] shadow-sm transition hover:bg-[var(--color-accent-400)]"
-          >
-            {t("tryCta")}
-            <ExternalLink className="h-4 w-4" />
-          </a>
         </Container>
       </section>
 
-      <section className="py-16 md:py-20">
+      <section className="py-6 md:py-10">
         <Container>
-          <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
+          <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] shadow-sm">
+            <iframe
+              src={siteConfig.products.aiDetector}
+              title={t("title")}
+              className="block h-[80vh] min-h-[640px] w-full border-0"
+              loading="lazy"
+              allow="clipboard-read; clipboard-write"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+          <div className="mt-3 flex items-center justify-end">
+            <a
+              href={siteConfig.products.aiDetector}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-muted)] hover:text-[var(--color-brand-700)]"
+            >
+              {t("openInNewTab")}
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </div>
+        </Container>
+      </section>
+
+      <section className="border-t border-[var(--color-border)] py-16 md:py-20">
+        <Container>
+          <p className="max-w-3xl text-pretty text-[var(--color-foreground)]/85 md:text-lg">
+            {t("intro")}
+          </p>
+
+          <h2 className="mt-12 text-2xl font-semibold tracking-tight md:text-3xl">
             {t("featuresTitle")}
           </h2>
           <div className="mt-10 grid gap-6 md:grid-cols-2">
@@ -120,7 +138,6 @@ export default async function AiDetectorPage({
                 {t("pricingBody")}
               </p>
             </div>
-
             <div className="rounded-3xl border border-[var(--color-border)] bg-gradient-to-br from-[var(--color-brand-700)] to-[var(--color-brand-900)] p-8 text-white md:p-10">
               <h3 className="text-2xl font-semibold tracking-tight">
                 {t("liveTitle")}
@@ -128,15 +145,6 @@ export default async function AiDetectorPage({
               <p className="mt-3 text-[var(--color-brand-100)]">
                 {t("liveBody")}
               </p>
-              <a
-                href={siteConfig.products.aiDetector}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-7 inline-flex items-center gap-2 rounded-full bg-[var(--color-accent-500)] px-5 py-3 text-sm font-semibold text-[#451a03] transition hover:bg-[var(--color-accent-400)]"
-              >
-                {t("tryCta")}
-                <ExternalLink className="h-4 w-4" />
-              </a>
             </div>
           </div>
         </Container>

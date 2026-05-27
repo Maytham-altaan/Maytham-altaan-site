@@ -106,7 +106,8 @@
     "liveTitle": "The tool is live",
     "liveBody": "The Altaan AI Detector is already shipping. Open it in a new tab and try it on your own text.",
     "tryCta": "Open the detector",
-    "liveBadge": "Live now"
+    "liveBadge": "Live now",
+    "openInNewTab": "Open the detector in a new tab"
   },
   "work": {
     "eyebrow": "Portfolio",

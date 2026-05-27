@@ -11,7 +11,9 @@ export const siteConfig = {
     instagram:
       "https://www.instagram.com/dr.maytham.aljubori?igsh=Y3YxaHdzdmh1am1u&utm_source=qr",
     linkedin: "https://iq.linkedin.com/in/maytham-al-jubori-a06929154",
+    github: "https://github.com/Maytham-altaan",
   },
+  githubUsername: "Maytham-altaan",
   products: {
     aiDetector: "https://altaan-detector.vercel.app/",
   },
