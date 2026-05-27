@@ -16,7 +16,7 @@ export const siteConfig = {
   },
   githubUsername: "Maytham-altaan",
   products: {
-    aiDetector: "https://altaan-detector.vercel.app/",
+    aiDetector: "https://detector.maytham-altaan.com/",
   },
   apps: [
     {
