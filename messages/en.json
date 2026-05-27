@@ -190,6 +190,15 @@
     "subtitle": "Tutorials, walkthroughs, and clinical-pharmacy notes.",
     "viewChannel": "View channel"
   },
+  "instagramShowcase": {
+    "eyebrow": "On Instagram",
+    "title": "Latest reels & posts",
+    "subtitle": "Behind the scenes, quick tips, and what I'm building.",
+    "viewProfile": "View profile",
+    "ctaTitle": "Follow me on Instagram",
+    "ctaBody": "Quick clinical-pharmacy tips, app launches, and behind-the-scenes posts. New reels weekly.",
+    "ctaButton": "Open Instagram"
+  },
   "ticker": {
     "aiDetectorMsg": "Altaan AI Detector is live — try it on your own text",
     "latestRepoMsg": "Latest on GitHub: {name}",

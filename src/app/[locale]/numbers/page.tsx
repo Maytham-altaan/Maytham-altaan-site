@@ -2,6 +2,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Container } from "@/components/Container";
 import { siteConfig } from "@/lib/site-config";
 import { getGithubStats } from "@/lib/github";
+import { getApps } from "@/lib/appstore";
 import {
   Stethoscope,
   Sparkles,
@@ -51,7 +52,8 @@ export default async function NumbersPage({
   setRequestLocale(locale);
   const t = await getTranslations("numbers");
 
-  const stats = await getGithubStats();
+  const [stats, apps] = await Promise.all([getGithubStats(), getApps()]);
+  const appCount = apps.length || 3;
   const yearsPracticing = new Date().getFullYear() - PHARMACY_START_YEAR;
 
   const cards = [
@@ -64,10 +66,10 @@ export default async function NumbersPage({
     },
     {
       icon: AppWindow,
-      value: siteConfig.apps.length.toString(),
+      value: appCount.toString(),
       label: t("appsLabel"),
       tone: "brand" as const,
-      live: false,
+      live: true,
     },
     {
       icon: Sparkles,

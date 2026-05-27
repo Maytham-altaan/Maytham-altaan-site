@@ -5,6 +5,7 @@ import { ProfilePhoto } from "@/components/ProfilePhoto";
 import { VisitorsBar } from "@/components/VisitorsBar";
 import { AppsShowcase } from "@/components/AppsShowcase";
 import { YouTubeShowcase } from "@/components/YouTubeShowcase";
+import { InstagramShowcase } from "@/components/InstagramShowcase";
 import {
   GraduationCap,
   Sparkles,
@@ -148,6 +149,8 @@ export default async function HomePage({
       <AppsShowcase locale={locale} />
 
       <YouTubeShowcase locale={locale} />
+
+      <InstagramShowcase locale={locale} />
 
       <section className="border-y border-[var(--color-border)] bg-[var(--color-subtle)]/40 py-20 md:py-24">
         <Container>

@@ -48,7 +48,7 @@ export default async function WorkPage({
       titleKey: "appCinematiTitle",
       tagKey: "appCinematiTag",
       descKey: "appCinematiDesc",
-      url: siteConfig.apps.find((a) => a.key === "cinemati")?.url ?? "#",
+      url: siteConfig.appUrls.cinemati,
       tone: "brand" as const,
     },
     {
@@ -56,7 +56,7 @@ export default async function WorkPage({
       titleKey: "appCalorieTitle",
       tagKey: "appCalorieTag",
       descKey: "appCalorieDesc",
-      url: siteConfig.apps.find((a) => a.key === "calorie")?.url ?? "#",
+      url: siteConfig.appUrls.calorie,
       tone: "brand" as const,
     },
     {
@@ -64,7 +64,7 @@ export default async function WorkPage({
       titleKey: "appResidipokTitle",
       tagKey: "appResidipokTag",
       descKey: "appResidipokDesc",
-      url: siteConfig.apps.find((a) => a.key === "residipok")?.url ?? "#",
+      url: siteConfig.appUrls.residipok,
       tone: "brand" as const,
     },
   ];

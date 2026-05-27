@@ -30,7 +30,7 @@ export async function AppsShowcase({ locale }: { locale: string }) {
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {apps.map((app) => (
             <a
-              key={app.key}
+              key={app.trackId}
               href={app.url}
               target="_blank"
               rel="noopener noreferrer"

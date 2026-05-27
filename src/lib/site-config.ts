@@ -18,27 +18,18 @@ export const siteConfig = {
   products: {
     aiDetector: "https://detector.maytham-altaan.com/",
   },
-  apps: [
-    {
-      key: "cinemati",
-      appStoreId: "6762375503",
-      url: "https://apps.apple.com/us/app/%D8%B3%D9%8A%D9%86%D9%85%D8%A7%D8%A6%D9%8A-cinemati/id6762375503",
-      platform: "iOS",
-    },
-    {
-      key: "calorie",
-      appStoreId: "6763806264",
-      url: "https://apps.apple.com/us/app/%D8%AD%D8%A7%D8%B3%D8%A8%D8%A9-%D8%A7%D9%84%D8%B3%D8%B9%D8%B1%D8%A7%D8%AA-%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9/id6763806264",
-      platform: "iOS",
-    },
-    {
-      key: "residipok",
-      appStoreId: "6768218005",
-      url: "https://apps.apple.com/us/app/residipok/id6768218005",
-      platform: "iOS",
-    },
-  ],
+  // Apple developer (artist) ID. All apps under this ID are auto-discovered
+  // via iTunes Search — when you publish a new app, it appears automatically
+  // on the home page AppsShowcase. The map below is only for hand-curated
+  // surfaces (Work page) that have translated descriptions per app.
+  appleArtistId: "1892850450",
+  appUrls: {
+    cinemati:
+      "https://apps.apple.com/us/app/%D8%B3%D9%8A%D9%86%D9%85%D8%A7%D8%A6%D9%8A-cinemati/id6762375503",
+    calorie:
+      "https://apps.apple.com/us/app/%D8%AD%D8%A7%D8%B3%D8%A8%D8%A9-%D8%A7%D9%84%D8%B3%D8%B9%D8%B1%D8%A7%D8%AA-%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9/id6763806264",
+    residipok: "https://apps.apple.com/us/app/residipok/id6768218005",
+  },
   youtubeChannelId: "UChRDme3tjanA3igj_Gcnp_g",
+  instagramUsername: "dr.maytham.aljubori",
 } as const;
-
-export type AppEntry = (typeof siteConfig.apps)[number];
