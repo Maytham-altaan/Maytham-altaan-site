@@ -1,10 +1,16 @@
 /**
  * Research-idea generator for Iraqi/Arab board (FIBMS) students.
- * Combines IPMJ grounding (recent published papers as anti-duplication
- * context) with a Groq LLM call to produce 5 structured thesis ideas.
+ * Combines two grounding sources — recent regional published research
+ * (kept anonymous in the user-facing UI) and current pre-prints from
+ * medRxiv (emerging-direction signal) — with a Groq LLM call to produce
+ * 5 structured thesis ideas.
  */
 
 import { getIpmjArticles } from "./ipmj";
+import {
+  getRecentPreprints,
+  filterPreprintsBySpecialty,
+} from "./medrxiv";
 
 export type StudyDesign =
   | "any"
@@ -21,7 +27,6 @@ export type ResearchInput = {
   subspecialty?: string;
   studyDesign: StudyDesign;
   constraints?: string;
-  /** "en" or "ar" — used to bias the LLM output direction; output is bilingual either way */
   locale: string;
 };
 
@@ -33,12 +38,15 @@ export type ResearchIdea = {
   methodology: string;
   novelty: string;
   difficulty: 1 | 2 | 3 | 4 | 5;
+  /** Optional — set by the LLM when the idea aligns with a current pre-print trend */
+  emerging?: boolean;
 };
 
 export type ResearchResult = {
   ok: boolean;
   ideas: ResearchIdea[];
-  ipmjSampleCount: number;
+  /** Combined count of recent publications + pre-prints used as grounding */
+  groundingCount: number;
   error?: string;
 };
 
@@ -47,13 +55,17 @@ const GROQ_MODEL = "llama-3.3-70b-versatile";
 
 const SYSTEM_PROMPT = `You are a senior clinical-research mentor advising Iraqi and Arab medical board (FIBMS) candidates on selecting a thesis topic. The Iraqi Board of Medical Specializations expects a thesis that is:
 
-- Original (no obvious duplicate of recently published work)
+- Original (no obvious duplicate of recently published work in the region)
 - Methodologically feasible within ~12 months at an Iraqi teaching hospital
 - Clinically relevant (preferably with patient-care impact)
 - Realistic in scope (sample size achievable, ethics-approval feasible)
 - Aligned with the candidate's stated specialty
 
-You are given a list of RECENTLY PUBLISHED Iraqi Postgraduate Medical Journal (IPMJ) papers as context — your ideas MUST NOT duplicate them. You may build on gaps, contradictions, or unexplored populations within those papers.
+You are given TWO context lists:
+
+1. RECENT REGIONAL PUBLICATIONS — work already published in the candidate's home region. Your ideas MUST NOT duplicate these. You may build on gaps, contradictions, or unexplored populations within them.
+
+2. RECENT PRE-PRINTS (emerging research) — papers posted in the last 30 days that have NOT yet been peer-reviewed. They reveal what global researchers are actively investigating RIGHT NOW. Strongly prefer thesis ideas that align with this emerging direction — those have the best chance of (a) being publishable on completion, (b) fitting hot funding lines, and (c) catching the FIBMS committee's eye for being current. Mark such ideas with "emerging": true.
 
 Return EXACTLY 5 thesis ideas as a JSON object with this exact shape (no markdown, no preamble, just JSON):
 
@@ -62,27 +74,39 @@ Return EXACTLY 5 thesis ideas as a JSON object with this exact shape (no markdow
     {
       "titleEn": "...",
       "titleAr": "...",
-      "background": "2-3 sentence rationale referencing why this matters in Iraq/Arab region",
+      "background": "2-3 sentence rationale referencing why this matters in the Iraqi/Arab clinical context",
       "researchQuestion": "one crisp PICO-style question",
       "methodology": "study design + setting + sample size estimate + key variables + analysis plan, in ~4 sentences",
-      "novelty": "1-2 sentences explicitly stating what this adds beyond existing IPMJ work",
-      "difficulty": 1-5 integer (1 = easy resident project, 5 = ambitious multi-center)
+      "novelty": "1-2 sentences explicitly stating what gap this fills",
+      "difficulty": 1-5 integer (1 = easy resident project, 5 = ambitious multi-center),
+      "emerging": true | false (true if it aligns with a current pre-print trend)
     },
     ... 4 more
   ]
 }
 
-Write titleAr in formal Modern Standard Arabic. All other fields in clear English. No fluff, no emojis, no markdown.`;
+Aim for at least 2 of the 5 ideas to be "emerging": true. Write titleAr in formal Modern Standard Arabic. All other fields in clear English. No fluff, no emojis, no markdown.`;
 
-function buildUserPrompt(input: ResearchInput, ipmjTitles: string[]): string {
-  const context = ipmjTitles.length
-    ? `RECENT IPMJ PUBLICATIONS (do not duplicate these — generate ideas that fill gaps):\n${ipmjTitles
+function buildUserPrompt(
+  input: ResearchInput,
+  regionalTitles: string[],
+  preprintTitles: string[]
+): string {
+  const regional = regionalTitles.length
+    ? `RECENT REGIONAL PUBLICATIONS (do NOT duplicate these — generate ideas that fill gaps):\n${regionalTitles
         .slice(0, 50)
         .map((t, i) => `${i + 1}. ${t}`)
         .join("\n")}`
-    : "(IPMJ context unavailable this run — rely on general knowledge of Arab medical research gaps.)";
+    : "(Regional publication context unavailable this run.)";
 
-  return `${context}
+  const preprints = preprintTitles.length
+    ? `\n\nRECENT PRE-PRINTS — emerging trends in the last 30 days (prefer ideas that align with these directions):\n${preprintTitles
+        .slice(0, 30)
+        .map((t, i) => `${i + 1}. ${t}`)
+        .join("\n")}`
+    : "\n\n(Pre-print context unavailable this run — rely on general knowledge of current research trends.)";
+
+  return `${regional}${preprints}
 
 CANDIDATE PROFILE:
 - Specialty: ${input.specialty}
@@ -101,15 +125,23 @@ export async function generateResearchIdeas(
     return {
       ok: false,
       ideas: [],
-      ipmjSampleCount: 0,
+      groundingCount: 0,
       error:
         "GROQ_API_KEY is not configured. Add it in Vercel Project Settings → Environment Variables.",
     };
   }
 
-  // 1. Pull recent IPMJ titles as grounding context.
-  const articles = await getIpmjArticles(80);
-  const ipmjTitles = articles.map((a) => a.title);
+  // 1. Pull both grounding sources in parallel.
+  const [regional, allPreprints] = await Promise.all([
+    getIpmjArticles(80),
+    getRecentPreprints(120),
+  ]);
+  const regionalTitles = regional.map((a) => a.title);
+  const preprintTitles = filterPreprintsBySpecialty(
+    allPreprints,
+    input.specialty
+  ).map((p) => p.title);
+  const groundingCount = regionalTitles.length + preprintTitles.length;
 
   // 2. Call Groq for structured ideas.
   try {
@@ -125,7 +157,10 @@ export async function generateResearchIdeas(
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: buildUserPrompt(input, ipmjTitles) },
+          {
+            role: "user",
+            content: buildUserPrompt(input, regionalTitles, preprintTitles),
+          },
         ],
       }),
     });
@@ -135,7 +170,7 @@ export async function generateResearchIdeas(
       return {
         ok: false,
         ideas: [],
-        ipmjSampleCount: ipmjTitles.length,
+        groundingCount,
         error: `Groq API error ${res.status}: ${detail.slice(0, 200)}`,
       };
     }
@@ -151,7 +186,7 @@ export async function generateResearchIdeas(
       return {
         ok: false,
         ideas: [],
-        ipmjSampleCount: ipmjTitles.length,
+        groundingCount,
         error: "LLM returned non-JSON output. Please retry.",
       };
     }
@@ -160,13 +195,13 @@ export async function generateResearchIdeas(
     return {
       ok: ideas.length > 0,
       ideas,
-      ipmjSampleCount: ipmjTitles.length,
+      groundingCount,
     };
   } catch (e) {
     return {
       ok: false,
       ideas: [],
-      ipmjSampleCount: ipmjTitles.length,
+      groundingCount,
       error:
         e instanceof Error ? e.message : "Unknown error calling the LLM.",
     };
@@ -175,10 +210,14 @@ export async function generateResearchIdeas(
 
 /** Simple in-memory rate-limit. Best-effort only — Vercel cold starts reset it. */
 const HITS = new Map<string, { count: number; resetAt: number }>();
-const WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const WINDOW_MS = 60 * 60 * 1000;
 const MAX_PER_WINDOW = 5;
 
-export function checkRateLimit(ip: string): { ok: boolean; remaining: number; resetAt: number } {
+export function checkRateLimit(ip: string): {
+  ok: boolean;
+  remaining: number;
+  resetAt: number;
+} {
   const now = Date.now();
   const entry = HITS.get(ip);
   if (!entry || entry.resetAt < now) {

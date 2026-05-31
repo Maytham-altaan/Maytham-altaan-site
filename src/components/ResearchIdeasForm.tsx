@@ -18,12 +18,13 @@ type Idea = {
   methodology: string;
   novelty: string;
   difficulty: number;
+  emerging?: boolean;
 };
 
 type Result = {
   ok: boolean;
   ideas: Idea[];
-  ipmjSampleCount: number;
+  groundingCount: number;
   error?: string;
   message?: string;
   remaining?: number;
@@ -108,7 +109,7 @@ export function ResearchIdeasForm({ locale }: { locale: string }) {
       setResult({
         ok: false,
         ideas: [],
-        ipmjSampleCount: 0,
+        groundingCount: 0,
         error: "network",
         message: t("networkError"),
       });
@@ -231,7 +232,7 @@ export function ResearchIdeasForm({ locale }: { locale: string }) {
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--color-muted)]">
             <div className="inline-flex items-center gap-1.5">
               <Stethoscope className="h-3.5 w-3.5" />
-              {t("ipmjGroundedNote", { count: result.ipmjSampleCount })}
+              {t("groundedNote", { count: result.groundingCount })}
             </div>
             {typeof result.remaining === "number" && (
               <div>{t("remainingHint", { n: result.remaining })}</div>
@@ -245,8 +246,18 @@ export function ResearchIdeasForm({ locale }: { locale: string }) {
                 className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] p-6 md:p-8"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-[var(--color-brand-700)]">
-                    {t("ideaLabel", { n: i + 1 })}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-[var(--color-brand-700)]">
+                      {t("ideaLabel", { n: i + 1 })}
+                    </div>
+                    {idea.emerging && (
+                      <span
+                        title={t("emergingTooltip")}
+                        className="inline-flex items-center gap-1 rounded-full bg-[var(--color-accent-100)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-accent-700)]"
+                      >
+                        ✨ {t("emergingBadge")}
+                      </span>
+                    )}
                   </div>
                   <DifficultyBadge level={idea.difficulty} t={t} />
                 </div>
@@ -269,13 +280,13 @@ export function ResearchIdeasForm({ locale }: { locale: string }) {
                 <Section title={t("novelty")} body={idea.novelty} />
 
                 <a
-                  href={`https://www.iasj.net/iasj/search?query=${encodeURIComponent(idea.titleEn)}`}
+                  href={`https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(idea.titleEn)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-5 inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-brand-700)] hover:text-[var(--color-brand-800)]"
                 >
                   <Search className="h-3.5 w-3.5" />
-                  {t("searchIpmj")}
+                  {t("searchLiterature")}
                 </a>
               </li>
             ))}
