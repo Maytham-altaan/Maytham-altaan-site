@@ -17,10 +17,12 @@ export function AuthForm() {
     setError("");
     try {
       const supa = getSupabaseBrowser();
+      // Send to /auth/callback so PKCE code → session exchange happens server-side,
+      // then redirects on to /en/cases.
       const { error: err } = await supa.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/cases`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/en/cases`,
         },
       });
       if (err) {
