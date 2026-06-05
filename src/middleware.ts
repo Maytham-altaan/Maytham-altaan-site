@@ -35,5 +35,7 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
+  // Exclude /api, /auth (auth callback), /_next, /_vercel, and any file with an extension
+  // from the i18n middleware so they aren't locale-prefixed.
+  matcher: ["/((?!api|auth|_next|_vercel|.*\\..*).*)"],
 };
