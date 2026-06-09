@@ -165,6 +165,7 @@ export async function POST(req: NextRequest) {
       submitter_name,
       submitter_email,
       submitter_affiliation: get("submitter_affiliation") || null,
+      submitter_orcid: get("submitter_orcid") || null,
       show_author: get("show_author") === "true",
     })
     .select("id, slug")

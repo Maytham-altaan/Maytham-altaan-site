@@ -38,6 +38,8 @@ export type CaseRow = {
   submitter_name: string;
   submitter_email: string;
   submitter_affiliation: string | null;
+  submitter_orcid: string | null;
+  doi: string | null;
   show_author: boolean;
   display_author: string | null;
   reviewed_by: string | null;

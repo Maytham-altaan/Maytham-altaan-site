@@ -69,6 +69,9 @@ export async function generateMetadata({
     other: {
       citation_title: c.title_en,
       citation_author: author,
+      ...(c.submitter_affiliation
+        ? { citation_author_institution: c.submitter_affiliation }
+        : {}),
       citation_publication_date: pubDate,
       citation_online_date: pubDate,
       citation_journal_title: "Clinical Case Library — Maytham Altaan",
@@ -76,6 +79,10 @@ export async function generateMetadata({
       citation_abstract_html_url: url,
       citation_fulltext_html_url: url,
       citation_public_url: url,
+      citation_keywords: [c.specialty, c.case_type, c.drug]
+        .filter(Boolean)
+        .join("; "),
+      ...(c.doi ? { citation_doi: c.doi } : {}),
       citation_language: "en",
     },
   };
@@ -120,12 +127,33 @@ export default async function CaseDetailPage({
     url: caseUrl,
     mainEntityOfPage: caseUrl,
     ...(imageUrl ? { image: imageUrl } : {}),
-    author: { "@type": "Person", name: author, url: siteConfig.social.orcid },
+    author: {
+      "@type": "Person",
+      name: author,
+      ...(c.submitter_orcid
+        ? { identifier: c.submitter_orcid, url: c.submitter_orcid }
+        : {}),
+      ...(c.submitter_affiliation
+        ? { affiliation: { "@type": "Organization", name: c.submitter_affiliation } }
+        : {}),
+    },
     publisher: {
       "@type": "Organization",
       name: "Clinical Case Library — Maytham Altaan",
       url: siteConfig.siteUrl,
     },
+    license: "https://creativecommons.org/licenses/by/4.0/",
+    isAccessibleForFree: true,
+    ...(c.doi
+      ? {
+          identifier: {
+            "@type": "PropertyValue",
+            propertyID: "DOI",
+            value: c.doi,
+          },
+          sameAs: `https://doi.org/${c.doi}`,
+        }
+      : {}),
     about: c.specialty,
     keywords: [c.specialty, c.case_type, c.drug].filter(Boolean).join(", "),
   };
@@ -273,8 +301,58 @@ export default async function CaseDetailPage({
                 </div>
                 <p className="mt-2 break-words text-xs text-[var(--color-foreground)]/85">
                   {author}. &ldquo;{c.title_en}&rdquo;. Clinical Case Library, Maytham Altaan.{" "}
-                  <span dir="ltr">{new Date(c.submitted_at).getFullYear()}</span>. maytham-altaan.com/cases/{c.slug}
+                  <span dir="ltr">{new Date(c.submitted_at).getFullYear()}</span>.{" "}
+                  {c.doi ? (
+                    <a className="underline" dir="ltr" href={`https://doi.org/${c.doi}`} target="_blank" rel="noopener noreferrer">
+                      https://doi.org/{c.doi}
+                    </a>
+                  ) : (
+                    <>maytham-altaan.com/cases/{c.slug}</>
+                  )}
                 </p>
+
+                <dl className="mt-4 space-y-1.5 border-t border-[var(--color-border)]/60 pt-3 text-xs">
+                  {c.doi && (
+                    <div className="flex justify-between gap-2">
+                      <dt className="text-[var(--color-muted)]">DOI</dt>
+                      <dd dir="ltr">
+                        <a className="underline" href={`https://doi.org/${c.doi}`} target="_blank" rel="noopener noreferrer">
+                          {c.doi}
+                        </a>
+                      </dd>
+                    </div>
+                  )}
+                  {c.submitter_orcid && (
+                    <div className="flex justify-between gap-2">
+                      <dt className="text-[var(--color-muted)]">ORCID</dt>
+                      <dd dir="ltr">
+                        <a
+                          className="underline"
+                          href={c.submitter_orcid.startsWith("http") ? c.submitter_orcid : `https://orcid.org/${c.submitter_orcid}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {c.submitter_orcid.replace("https://orcid.org/", "")}
+                        </a>
+                      </dd>
+                    </div>
+                  )}
+                  <div className="flex justify-between gap-2">
+                    <dt className="text-[var(--color-muted)]">{t("licenseLabel")}</dt>
+                    <dd dir="ltr">
+                      <a className="underline" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">
+                        CC BY 4.0
+                      </a>
+                    </dd>
+                  </div>
+                </dl>
+
+                <Link
+                  href="/cases/policies"
+                  className="mt-3 inline-block text-xs font-medium text-[var(--color-brand-700)] hover:underline"
+                >
+                  {t("editorialPolicies")} →
+                </Link>
               </div>
             </div>
           </aside>
@@ -283,7 +361,10 @@ export default async function CaseDetailPage({
         <CommentsSection caseId={c.id} initialComments={comments} />
 
         <p className="mt-12 text-xs italic text-[var(--color-muted)]">
-          {t("ethicsDisclaimer")}
+          {t("ethicsDisclaimer")}{" "}
+          <Link href="/cases/policies" className="not-italic underline hover:text-[var(--color-brand-700)]">
+            {t("editorialPolicies")}
+          </Link>
         </p>
       </Container>
     </section>

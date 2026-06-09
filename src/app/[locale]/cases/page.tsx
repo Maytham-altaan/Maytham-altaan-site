@@ -123,7 +123,10 @@ export default async function CasesIndexPage({
           )}
 
           <p className="mt-10 text-xs italic text-[var(--color-muted)]">
-            {t("ethicsDisclaimer")}
+            {t("ethicsDisclaimer")}{" "}
+            <Link href="/cases/policies" className="not-italic underline hover:text-[var(--color-brand-700)]">
+              {t("editorialPolicies")}
+            </Link>
           </p>
         </Container>
       </section>

@@ -220,9 +220,13 @@ export function SubmitCaseForm() {
             <span className="text-sm font-medium">{t("submitterEmailLabel")} *</span>
             <input type="email" name="submitter_email" required maxLength={200} className={input} />
           </label>
-          <label className="block md:col-span-2">
+          <label className="block">
             <span className="text-sm font-medium">{t("submitterAffiliationLabel")}</span>
             <input name="submitter_affiliation" maxLength={200} className={input} />
+          </label>
+          <label className="block">
+            <span className="text-sm font-medium">{t("orcidLabel")}</span>
+            <input name="submitter_orcid" maxLength={60} placeholder={t("orcidPlaceholder")} className={input} dir="ltr" />
           </label>
         </div>
         <label className="flex items-start gap-3 text-sm">

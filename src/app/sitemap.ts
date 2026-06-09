@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { siteConfig } from "@/lib/site-config";
 import { listApprovedCaseSlugs } from "@/lib/cases/queries";
+import { POLICY_DOCS } from "@/content/case-policies";
 
 // Refresh the sitemap hourly so newly-approved cases appear for crawlers.
 export const revalidate = 3600;
@@ -19,6 +20,8 @@ const STATIC_PATHS = [
   "/research-ideas",
   "/cases",
   "/cases/submit",
+  "/cases/policies",
+  ...POLICY_DOCS.map((d) => `/cases/policies/${d.slug}`),
   "/contact",
 ];
 

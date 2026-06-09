@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Loader2, Check, X, FileText, Eye, EyeOff, Trash2 } from "lucide-react";
+import { Loader2, Check, X, FileText, Eye, EyeOff, Trash2, Hash } from "lucide-react";
 import type { CaseRow } from "@/lib/cases/types";
 
 type Action = "approve" | "reject" | "unpublish" | "delete";
@@ -27,6 +27,23 @@ export function AdminDashboard({
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ action, notes }),
+      });
+      if (res.ok) router.refresh();
+      else alert("Action failed");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function setDoi(id: string, current: string | null) {
+    const doi = prompt(t("adminSetDoiPrompt"), current || "");
+    if (doi === null) return;
+    setBusyId(id);
+    try {
+      const res = await fetch(`/api/cases/${id}/review`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "set_doi", doi }),
       });
       if (res.ok) router.refresh();
       else alert("Action failed");
@@ -146,6 +163,11 @@ export function AdminDashboard({
                     {c.specialty} · {t(`caseType.${c.case_type}`)}
                   </div>
                   <h3 className="truncate text-sm font-semibold">{c.title_en}</h3>
+                  {c.doi && (
+                    <div className="truncate text-[11px] text-[var(--color-muted)]" dir="ltr">
+                      DOI: {c.doi}
+                    </div>
+                  )}
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-2">
                   <Link
@@ -156,6 +178,14 @@ export function AdminDashboard({
                     <Eye className="h-3.5 w-3.5" />
                     {t("adminView")}
                   </Link>
+                  <button
+                    onClick={() => setDoi(c.id, c.doi)}
+                    disabled={busyId === c.id}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--color-subtle)] disabled:opacity-60"
+                  >
+                    <Hash className="h-3.5 w-3.5" />
+                    {c.doi ? t("adminEditDoi") : t("adminSetDoi")}
+                  </button>
                   <button
                     onClick={() => {
                       if (confirm(t("adminUnpublishConfirm"))) review(c.id, "unpublish");

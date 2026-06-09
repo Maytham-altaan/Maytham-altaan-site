@@ -7,8 +7,8 @@ import {
 
 export const runtime = "nodejs";
 
-type ReviewAction = "approve" | "reject" | "unpublish" | "delete";
-const VALID_ACTIONS: ReviewAction[] = ["approve", "reject", "unpublish", "delete"];
+type ReviewAction = "approve" | "reject" | "unpublish" | "delete" | "set_doi";
+const VALID_ACTIONS: ReviewAction[] = ["approve", "reject", "unpublish", "delete", "set_doi"];
 
 export async function POST(
   req: NextRequest,
@@ -20,7 +20,7 @@ export async function POST(
   }
 
   const { id } = await ctx.params;
-  let body: { action?: ReviewAction; notes?: string };
+  let body: { action?: ReviewAction; notes?: string; doi?: string };
   try {
     body = await req.json();
   } catch {
@@ -56,6 +56,22 @@ export async function POST(
   }
 
   const supa = await getSupabaseServer();
+
+  // Assign / update a DOI on a published case.
+  if (body.action === "set_doi") {
+    const { error } = await supa
+      .from("cases")
+      .update({ doi: (body.doi || "").trim() || null })
+      .eq("id", id);
+    if (error) {
+      return NextResponse.json(
+        { ok: false, error: "doi_update_failed", detail: error.message },
+        { status: 500 }
+      );
+    }
+    return NextResponse.json({ ok: true });
+  }
+
   const { data: userResp } = await supa.auth.getUser();
   const reviewerId = userResp.user?.id ?? null;
 
