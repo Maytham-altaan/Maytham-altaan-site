@@ -4,6 +4,7 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
+import { siteConfig } from "@/lib/site-config";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { NewsTicker } from "@/components/NewsTicker";
@@ -34,11 +35,36 @@ export async function generateMetadata({
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "meta" });
   return {
+    metadataBase: new URL(siteConfig.siteUrl),
     title: {
       default: t("titleSuffix"),
       template: `%s · ${t("siteName")}`,
     },
     description: t("description"),
+    applicationName: t("siteName"),
+    authors: [{ name: siteConfig.fullName, url: siteConfig.social.orcid }],
+    alternates: {
+      canonical: `/${locale}`,
+      languages: { en: "/en", ar: "/ar" },
+    },
+    openGraph: {
+      type: "website",
+      siteName: t("siteName"),
+      title: t("titleSuffix"),
+      description: t("description"),
+      url: `${siteConfig.siteUrl}/${locale}`,
+      locale: locale === "ar" ? "ar_IQ" : "en_US",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t("titleSuffix"),
+      description: t("description"),
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: { index: true, follow: true, "max-image-preview": "large" },
+    },
   };
 }
 

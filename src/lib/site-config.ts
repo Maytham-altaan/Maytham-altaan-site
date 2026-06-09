@@ -1,5 +1,6 @@
 export const siteConfig = {
   fullName: "Dr. Maytham Altaan",
+  siteUrl: "https://maytham-altaan.com",
   email: "Maytham.m.altaan@gmail.com",
   phones: [
     { display: "+964 770 426 8175", intl: "+9647704268175", wa: "9647704268175" },

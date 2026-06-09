@@ -1,5 +1,7 @@
+import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { siteConfig } from "@/lib/site-config";
 import { Container } from "@/components/Container";
 import { Link } from "@/i18n/navigation";
 import { CommentsSection } from "@/components/cases/CommentsSection";
@@ -18,10 +20,62 @@ export async function generateMetadata({
   params,
 }: {
   params: Promise<{ locale: string; slug: string }>;
-}) {
-  const { slug } = await params;
+}): Promise<Metadata> {
+  const { locale, slug } = await params;
   const c = await getApprovedCaseBySlug(slug);
-  return { title: c?.title_en ?? "Case" };
+  if (!c) return { title: "Case" };
+
+  const url = `${siteConfig.siteUrl}/${locale}/cases/${c.slug}`;
+  const description = (c.summary_en || "").slice(0, 200);
+  const img = caseImageUrl(c.image_path);
+  const author =
+    c.display_author ||
+    (c.show_author ? c.submitter_name : "Anonymous contributor");
+  const published = new Date(c.submitted_at);
+  const pubDate = `${published.getFullYear()}/${String(
+    published.getMonth() + 1
+  ).padStart(2, "0")}/${String(published.getDate()).padStart(2, "0")}`;
+
+  return {
+    title: c.title_en,
+    description,
+    alternates: {
+      canonical: `/${locale}/cases/${c.slug}`,
+      languages: {
+        en: `${siteConfig.siteUrl}/en/cases/${c.slug}`,
+        ar: `${siteConfig.siteUrl}/ar/cases/${c.slug}`,
+      },
+    },
+    openGraph: {
+      type: "article",
+      title: c.title_en,
+      description,
+      url,
+      publishedTime: published.toISOString(),
+      authors: [author],
+      images: img ? [{ url: img }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: c.title_en,
+      description,
+      images: img ? [img] : undefined,
+    },
+    // Google Scholar / Highwire Press citation tags — make the case eligible
+    // for indexing by Google Scholar.
+    other: {
+      citation_title: c.title_en,
+      citation_author: author,
+      citation_publication_date: pubDate,
+      citation_online_date: pubDate,
+      citation_journal_title: "Clinical Case Library — Maytham Altaan",
+      citation_publisher: "Maytham Altaan",
+      citation_abstract_html_url: url,
+      citation_fulltext_html_url: url,
+      citation_public_url: url,
+      citation_language: "en",
+    },
+  };
 }
 
 export default async function CaseDetailPage({
@@ -42,8 +96,36 @@ export default async function CaseDetailPage({
   const author =
     c.display_author || (c.show_author ? c.submitter_name : t("anonymousAuthor"));
 
+  const caseUrl = `${siteConfig.siteUrl}/${locale}/cases/${c.slug}`;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "MedicalScholarlyArticle",
+    headline: c.title_en,
+    name: c.title_en,
+    abstract: c.summary_en,
+    description: c.summary_en,
+    datePublished: new Date(c.submitted_at).toISOString(),
+    dateModified: new Date(c.updated_at).toISOString(),
+    inLanguage: locale,
+    url: caseUrl,
+    mainEntityOfPage: caseUrl,
+    ...(imageUrl ? { image: imageUrl } : {}),
+    author: { "@type": "Person", name: author, url: siteConfig.social.orcid },
+    publisher: {
+      "@type": "Organization",
+      name: "Clinical Case Library — Maytham Altaan",
+      url: siteConfig.siteUrl,
+    },
+    about: c.specialty,
+    keywords: [c.specialty, c.case_type, c.drug].filter(Boolean).join(", "),
+  };
+
   return (
     <section className="py-12 md:py-16">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Container>
         <Link
           href="/cases"

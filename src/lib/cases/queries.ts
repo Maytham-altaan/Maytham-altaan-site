@@ -1,3 +1,4 @@
+import { createClient } from "@supabase/supabase-js";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import type {
   CaseRow,
@@ -77,6 +78,26 @@ export async function listCommentsForCase(
     .eq("is_hidden", false)
     .order("created_at", { ascending: true });
   return (data as CommentRow[] | null) ?? [];
+}
+
+/** Approved case slugs + timestamps for the sitemap. Uses a plain anon
+ *  client (no cookies) so it's safe to call from sitemap.ts at build time. */
+export async function listApprovedCaseSlugs(): Promise<
+  { slug: string; updated_at: string }[]
+> {
+  if (!supabaseConfigured()) return [];
+  const supa = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { persistSession: false, autoRefreshToken: false } }
+  );
+  const { data } = await supa
+    .from("cases")
+    .select("slug, updated_at")
+    .eq("status", "approved")
+    .order("updated_at", { ascending: false })
+    .limit(2000);
+  return (data as { slug: string; updated_at: string }[] | null) ?? [];
 }
 
 export async function getCaseLikeInfo(
