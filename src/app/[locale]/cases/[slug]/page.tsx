@@ -15,7 +15,7 @@ import {
   getContributorRating,
 } from "@/lib/cases/queries";
 import { caseImageUrl } from "@/lib/cases/types";
-import { ArrowLeft, Calendar, User2, Star, BadgeCheck } from "lucide-react";
+import { ArrowLeft, Calendar, User2, Star, BadgeCheck, Download } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -78,6 +78,7 @@ export async function generateMetadata({
       citation_publisher: "Maytham Altaan",
       citation_abstract_html_url: url,
       citation_fulltext_html_url: url,
+      citation_pdf_url: `${siteConfig.siteUrl}/api/cases/pdf/${c.slug}`,
       citation_public_url: url,
       citation_keywords: [c.specialty, c.case_type, c.drug]
         .filter(Boolean)
@@ -346,6 +347,16 @@ export default async function CaseDetailPage({
                     </dd>
                   </div>
                 </dl>
+
+                <a
+                  href={`/api/cases/pdf/${c.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full border border-[var(--color-border)] px-4 py-2 text-xs font-medium hover:bg-[var(--color-subtle)]"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  {t("downloadPdf")}
+                </a>
 
                 <Link
                   href="/cases/policies"
