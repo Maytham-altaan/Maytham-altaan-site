@@ -6,7 +6,7 @@ import {
   currentUserIsReviewer,
   getSupabaseServer,
 } from "@/lib/supabase/server";
-import { listPendingCases } from "@/lib/cases/queries";
+import { listPendingCases, listApprovedCases } from "@/lib/cases/queries";
 import { ShieldCheck } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -52,7 +52,10 @@ export default async function CasesAdminPage({
     );
   }
 
-  const pending = await listPendingCases();
+  const [pending, published] = await Promise.all([
+    listPendingCases(),
+    listApprovedCases(),
+  ]);
   return (
     <section className="py-12 md:py-16">
       <Container>
@@ -67,7 +70,7 @@ export default async function CasesAdminPage({
           {t("adminSubtitle", { count: pending.length })}
         </p>
         <div className="mt-10">
-          <AdminDashboard pending={pending} />
+          <AdminDashboard pending={pending} published={published} />
         </div>
       </Container>
     </section>
