@@ -124,6 +124,57 @@ export async function getCaseLikeInfo(
   return { count: count ?? 0, likedByMe };
 }
 
+export async function getCaseRating(
+  caseId: string
+): Promise<{ avg: number; count: number; myRating: number | null }> {
+  if (!supabaseConfigured()) return { avg: 0, count: 0, myRating: null };
+  const supa = await getSupabaseServer();
+  const { data } = await supa
+    .from("case_ratings")
+    .select("rating")
+    .eq("case_id", caseId);
+  const rows = (data as { rating: number }[] | null) ?? [];
+  const count = rows.length;
+  const avg = count ? rows.reduce((s, r) => s + r.rating, 0) / count : 0;
+
+  let myRating: number | null = null;
+  const { data: userResp } = await supa.auth.getUser();
+  if (userResp.user) {
+    const { data: mine } = await supa
+      .from("case_ratings")
+      .select("rating")
+      .eq("case_id", caseId)
+      .eq("user_id", userResp.user.id)
+      .maybeSingle();
+    myRating = (mine as { rating: number } | null)?.rating ?? null;
+  }
+  return { avg, count, myRating };
+}
+
+/** Aggregate reputation for a contributor (by submitter email) across all
+ *  their approved cases. Email is used server-side only and never returned. */
+export async function getContributorRating(
+  submitterEmail: string
+): Promise<{ avg: number; ratingCount: number; caseCount: number }> {
+  if (!supabaseConfigured() || !submitterEmail)
+    return { avg: 0, ratingCount: 0, caseCount: 0 };
+  const supa = await getSupabaseServer();
+  const { data: cases } = await supa
+    .from("cases")
+    .select("id")
+    .eq("submitter_email", submitterEmail)
+    .eq("status", "approved");
+  const ids = ((cases as { id: string }[] | null) ?? []).map((c) => c.id);
+  if (!ids.length) return { avg: 0, ratingCount: 0, caseCount: ids.length };
+  const { data: ratings } = await supa
+    .from("case_ratings")
+    .select("rating")
+    .in("case_id", ids);
+  const rs = ((ratings as { rating: number }[] | null) ?? []).map((r) => r.rating);
+  const avg = rs.length ? rs.reduce((a, b) => a + b, 0) / rs.length : 0;
+  return { avg, ratingCount: rs.length, caseCount: ids.length };
+}
+
 export async function listPendingCases(): Promise<CaseRow[]> {
   if (!supabaseConfigured()) return [];
   const supa = await getSupabaseServer();

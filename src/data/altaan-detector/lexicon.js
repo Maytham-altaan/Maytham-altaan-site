@@ -299,6 +299,30 @@ export const BASE = {
 };
 
 export const PHRASES = {
+  /* ── AI "slop" tells — distinctive multi-word phrases adapted from
+     hardikpandya/stop-slop (MIT). Common single adverbs from that list
+     (just, really, actually…) are intentionally excluded to protect
+     precision on genuine human writing. ── */
+  "here's the thing":{w:3,alt:["the point is"]},
+  "the uncomfortable truth is":{w:3,alt:["honestly","in truth"]},
+  "let me be clear":{w:3,alt:["to be clear"]},
+  "let that sink in":{w:3,alt:["consider that"]},
+  "make no mistake":{w:3,alt:["clearly","to be clear"]},
+  "this matters because":{w:2,alt:["because"]},
+  "here's why that matters":{w:3,alt:["this matters because"]},
+  "here's what i find interesting":{w:3,alt:["interestingly"]},
+  "at its core":{w:2,alt:["basically","essentially"]},
+  "in a world where":{w:3,alt:["when","where"]},
+  "the reality is":{w:2,alt:["in fact"]},
+  "plot twist":{w:3,alt:["unexpectedly"]},
+  "let me walk you through":{w:3,alt:["here is","this shows"]},
+  "as we'll see":{w:2,alt:["as shown below"]},
+  "the implications are significant":{w:3,alt:["this matters"]},
+  "the stakes are high":{w:2,alt:["this matters"]},
+  "the consequences are real":{w:2,alt:["this has real effects"]},
+  "but that's another post":{w:3,alt:["more on that elsewhere"]},
+  "you already know this":{w:2,alt:["as you know"]},
+  "i'm going to be honest":{w:2,alt:["honestly"]},
   "in today's world":{w:3,alt:["these days","right now","currently"]},
   "in the realm of":{w:3,alt:["in","within","in the field of"]},
   "it is important to note":{w:3,alt:["note that","keep in mind"]},
@@ -543,6 +567,7 @@ export const AI_OPENERS = [
   "in this","this","these","there are","there is","one of the",
   "let's","remember","whether","imagine","picture","consider","discover",
   "explore","you'll","you've","when you","when it",
+  "here's","make no","let me","plot twist","the truth",
 ];
 
 export const HEDGES = [
@@ -553,6 +578,7 @@ export const HEDGES = [
   "let's dive","let's get","let's explore","let's take a look",
   "no matter","by no means","without a doubt","needless to say",
   "lead to","step by step","stay ahead","at the end of the day",
+  "here's the thing","let me be clear","the reality is","at its core",
 ];
 
 export const WEIGHT_LABEL = { 3: "very AI-like", 2: "AI-leaning", 1: "soft flag" };

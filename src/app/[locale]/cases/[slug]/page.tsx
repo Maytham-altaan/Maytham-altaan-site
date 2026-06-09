@@ -6,13 +6,16 @@ import { Container } from "@/components/Container";
 import { Link } from "@/i18n/navigation";
 import { CommentsSection } from "@/components/cases/CommentsSection";
 import { CaseActions } from "@/components/cases/CaseActions";
+import { CaseRating } from "@/components/cases/CaseRating";
 import {
   getApprovedCaseBySlug,
   listCommentsForCase,
   getCaseLikeInfo,
+  getCaseRating,
+  getContributorRating,
 } from "@/lib/cases/queries";
 import { caseImageUrl } from "@/lib/cases/types";
-import { ArrowLeft, Calendar, User2 } from "lucide-react";
+import { ArrowLeft, Calendar, User2, Star, BadgeCheck } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -88,13 +91,20 @@ export default async function CaseDetailPage({
   const t = await getTranslations("cases");
   const c = await getApprovedCaseBySlug(slug);
   if (!c) notFound();
-  const [comments, likeInfo] = await Promise.all([
+  const [comments, likeInfo, rating, contributor] = await Promise.all([
     listCommentsForCase(c.id),
     getCaseLikeInfo(c.id),
+    getCaseRating(c.id),
+    getContributorRating(c.submitter_email),
   ]);
   const imageUrl = caseImageUrl(c.image_path);
   const author =
     c.display_author || (c.show_author ? c.submitter_name : t("anonymousAuthor"));
+
+  // Trust signals: top-rated case + trusted contributor.
+  const topRated = rating.count >= 3 && rating.avg >= 4.5;
+  const trustedContributor =
+    contributor.ratingCount >= 3 && contributor.avg >= 4;
 
   const caseUrl = `${siteConfig.siteUrl}/${locale}/cases/${c.slug}`;
   const jsonLd = {
@@ -152,6 +162,12 @@ export default async function CaseDetailPage({
               {c.drug}
             </span>
           )}
+          {topRated && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-amber-700">
+              <Star className="h-3 w-3 fill-current" />
+              {t("topRatedBadge")}
+            </span>
+          )}
         </div>
 
         <h1 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
@@ -168,6 +184,21 @@ export default async function CaseDetailPage({
             <User2 className="h-3.5 w-3.5" />
             {author}
           </span>
+          {trustedContributor && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand-100)] px-2 py-0.5 font-medium text-[var(--color-brand-800)]">
+              <BadgeCheck className="h-3.5 w-3.5" />
+              {t("trustedContributorBadge")}
+            </span>
+          )}
+          {contributor.ratingCount > 0 && (
+            <span className="inline-flex items-center gap-1" title={t("contributorReputationTitle")}>
+              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+              {t("contributorReputation", {
+                avg: contributor.avg.toFixed(1),
+                cases: contributor.caseCount,
+              })}
+            </span>
+          )}
           <span className="inline-flex items-center gap-1.5" dir="ltr">
             <Calendar className="h-3.5 w-3.5" />
             {new Date(c.submitted_at).toLocaleDateString(locale)}
@@ -189,7 +220,13 @@ export default async function CaseDetailPage({
               </p>
             )}
 
-            <div className="mt-6 border-y border-[var(--color-border)] py-4">
+            <div className="mt-6 space-y-4 border-y border-[var(--color-border)] py-4">
+              <CaseRating
+                caseId={c.id}
+                initialAvg={rating.avg}
+                initialCount={rating.count}
+                initialMyRating={rating.myRating}
+              />
               <CaseActions
                 caseId={c.id}
                 title={c.title_en}
