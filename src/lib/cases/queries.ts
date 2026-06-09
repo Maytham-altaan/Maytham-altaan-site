@@ -79,6 +79,30 @@ export async function listCommentsForCase(
   return (data as CommentRow[] | null) ?? [];
 }
 
+export async function getCaseLikeInfo(
+  caseId: string
+): Promise<{ count: number; likedByMe: boolean }> {
+  if (!supabaseConfigured()) return { count: 0, likedByMe: false };
+  const supa = await getSupabaseServer();
+  const { count } = await supa
+    .from("case_likes")
+    .select("*", { count: "exact", head: true })
+    .eq("case_id", caseId);
+
+  let likedByMe = false;
+  const { data: userResp } = await supa.auth.getUser();
+  if (userResp.user) {
+    const { data: mine } = await supa
+      .from("case_likes")
+      .select("case_id")
+      .eq("case_id", caseId)
+      .eq("user_id", userResp.user.id)
+      .maybeSingle();
+    likedByMe = !!mine;
+  }
+  return { count: count ?? 0, likedByMe };
+}
+
 export async function listPendingCases(): Promise<CaseRow[]> {
   if (!supabaseConfigured()) return [];
   const supa = await getSupabaseServer();

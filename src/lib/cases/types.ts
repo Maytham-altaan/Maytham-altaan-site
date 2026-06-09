@@ -33,7 +33,8 @@ export type CaseRow = {
   case_outcome: string | null;
   learning_points: string | null;
   references_text: string | null;
-  consent_path: string;
+  image_path: string | null;
+  consent_path: string | null;
   submitter_name: string;
   submitter_email: string;
   submitter_affiliation: string | null;
@@ -71,6 +72,14 @@ export const CASE_OUTCOMES: CaseOutcome[] = [
   "ongoing",
   "unknown",
 ];
+
+/** Public URL for a case photo stored in the 'case-images' bucket. */
+export function caseImageUrl(path: string | null | undefined): string | null {
+  if (!path) return null;
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!base) return null;
+  return `${base}/storage/v1/object/public/case-images/${path}`;
+}
 
 /** Slug from title — used for human-readable URLs. */
 export function slugify(input: string): string {

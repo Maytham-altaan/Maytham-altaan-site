@@ -45,15 +45,22 @@ export function AdminDashboard({ pending }: { pending: CaseRow[] }) {
             <div className="text-xs font-semibold uppercase tracking-wider text-[var(--color-accent-700)]">
               {t("adminPendingBadge")} · {c.specialty} · {t(`caseType.${c.case_type}`)}
             </div>
-            <a
-              href={`/api/cases/admin/consent?path=${encodeURIComponent(c.consent_path)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-brand-700)] hover:underline"
-            >
-              <FileText className="h-3.5 w-3.5" />
-              {t("adminConsentLink")}
-            </a>
+            {c.consent_path ? (
+              <a
+                href={`/api/cases/admin/consent?path=${encodeURIComponent(c.consent_path)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-brand-700)] hover:underline"
+              >
+                <FileText className="h-3.5 w-3.5" />
+                {t("adminConsentLink")}
+              </a>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-xs text-[var(--color-muted)]">
+                <FileText className="h-3.5 w-3.5" />
+                {t("adminNoConsent")}
+              </span>
+            )}
           </div>
           <h3 className="mt-3 text-lg font-semibold tracking-tight">{c.title_en}</h3>
           {c.title_ar && (

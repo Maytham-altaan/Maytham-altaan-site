@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, CheckCircle2, AlertCircle, FileUp } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle, FileUp, ImagePlus } from "lucide-react";
 import { CASE_TYPES, CASE_OUTCOMES } from "@/lib/cases/types";
 
 const SPECIALTIES = [
@@ -23,6 +23,7 @@ export function SubmitCaseForm() {
   const [error, setError] = useState<string>("");
   const [slug, setSlug] = useState<string>("");
   const [showAuthor, setShowAuthor] = useState(true);
+  const [anonymized, setAnonymized] = useState(false);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -30,6 +31,7 @@ export function SubmitCaseForm() {
     setError("");
     const fd = new FormData(e.currentTarget);
     fd.set("show_author", String(showAuthor));
+    fd.set("anonymized", String(anonymized));
     try {
       const res = await fetch("/api/cases/submit", { method: "POST", body: fd });
       const data = await res.json();
@@ -188,6 +190,23 @@ export function SubmitCaseForm() {
         </label>
       </fieldset>
 
+      <fieldset className="mt-8 space-y-3">
+        <legend className="text-sm font-semibold uppercase tracking-wider text-[var(--color-brand-700)]">
+          {t("sectionMedia")}
+        </legend>
+        <p className="text-sm text-[var(--color-foreground)]/85">{t("imageExplain")}</p>
+        <label className="flex items-center gap-3 text-sm">
+          <ImagePlus className="h-5 w-5 text-[var(--color-brand-700)]" />
+          <input
+            type="file"
+            name="image"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            className="text-sm file:mr-3 file:rounded-full file:border-0 file:bg-[var(--color-brand-700)] file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white"
+          />
+        </label>
+        <p className="text-xs italic text-[var(--color-muted)]">{t("imageHint")}</p>
+      </fieldset>
+
       <fieldset className="mt-8 space-y-5">
         <legend className="text-sm font-semibold uppercase tracking-wider text-[var(--color-brand-700)]">
           {t("sectionSubmitter")}
@@ -222,10 +241,26 @@ export function SubmitCaseForm() {
         </label>
       </fieldset>
 
-      <fieldset className="mt-8 space-y-3 rounded-xl border border-dashed border-[var(--color-accent-300)] bg-[var(--color-accent-50)]/50 p-5">
+      <fieldset className="mt-8 space-y-4 rounded-xl border border-dashed border-[var(--color-accent-300)] bg-[var(--color-accent-50)]/50 p-5">
         <legend className="px-2 text-sm font-semibold uppercase tracking-wider text-[var(--color-accent-700)]">
           {t("sectionConsent")}
         </legend>
+
+        <label className="flex items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            checked={anonymized}
+            onChange={(e) => setAnonymized(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-[var(--color-border)]"
+          />
+          <span>
+            <span className="font-medium">{t("anonymizedLabel")} *</span>
+            <span className="block text-xs text-[var(--color-muted)]">
+              {t("anonymizedHint")}
+            </span>
+          </span>
+        </label>
+
         <p className="text-sm text-[var(--color-foreground)]/85">{t("consentExplain")}</p>
         <label className="flex items-center gap-3 text-sm">
           <FileUp className="h-5 w-5 text-[var(--color-accent-700)]" />
@@ -233,7 +268,6 @@ export function SubmitCaseForm() {
             type="file"
             name="consent"
             accept="application/pdf"
-            required
             className="text-sm file:mr-3 file:rounded-full file:border-0 file:bg-[var(--color-brand-700)] file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white"
           />
         </label>
@@ -251,7 +285,7 @@ export function SubmitCaseForm() {
 
       <button
         type="submit"
-        disabled={status === "submitting"}
+        disabled={status === "submitting" || !anonymized}
         className="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--color-brand-700)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--color-brand-800)] disabled:opacity-60"
       >
         {status === "submitting" ? (

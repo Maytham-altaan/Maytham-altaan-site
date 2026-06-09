@@ -3,10 +3,13 @@ import { notFound } from "next/navigation";
 import { Container } from "@/components/Container";
 import { Link } from "@/i18n/navigation";
 import { CommentsSection } from "@/components/cases/CommentsSection";
+import { CaseActions } from "@/components/cases/CaseActions";
 import {
   getApprovedCaseBySlug,
   listCommentsForCase,
+  getCaseLikeInfo,
 } from "@/lib/cases/queries";
+import { caseImageUrl } from "@/lib/cases/types";
 import { ArrowLeft, Calendar, User2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +34,13 @@ export default async function CaseDetailPage({
   const t = await getTranslations("cases");
   const c = await getApprovedCaseBySlug(slug);
   if (!c) notFound();
-  const comments = await listCommentsForCase(c.id);
+  const [comments, likeInfo] = await Promise.all([
+    listCommentsForCase(c.id),
+    getCaseLikeInfo(c.id),
+  ]);
+  const imageUrl = caseImageUrl(c.image_path);
+  const author =
+    c.display_author || (c.show_author ? c.submitter_name : t("anonymousAuthor"));
 
   return (
     <section className="py-12 md:py-16">
@@ -75,7 +84,7 @@ export default async function CaseDetailPage({
         <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-[var(--color-muted)]">
           <span className="inline-flex items-center gap-1.5">
             <User2 className="h-3.5 w-3.5" />
-            {c.display_author || (c.show_author ? c.submitter_name : t("anonymousAuthor"))}
+            {author}
           </span>
           <span className="inline-flex items-center gap-1.5" dir="ltr">
             <Calendar className="h-3.5 w-3.5" />
@@ -86,36 +95,68 @@ export default async function CaseDetailPage({
           )}
         </div>
 
-        <p className="mt-6 max-w-3xl text-lg text-[var(--color-foreground)]/85">
-          {c.summary_en}
-        </p>
-        {c.summary_ar && (
-          <p dir="rtl" className="mt-3 max-w-3xl text-base text-[var(--color-foreground)]/80">
-            {c.summary_ar}
-          </p>
-        )}
-
-        <div className="mt-10 grid gap-8 md:grid-cols-3">
-          <article className="prose-like md:col-span-2 space-y-8">
-            <Section title={t("presentationLabel")} body={c.presentation} />
-            {c.investigations && <Section title={t("investigationsLabel")} body={c.investigations} />}
-            {c.diagnosis && <Section title={t("diagnosisLabel")} body={c.diagnosis} />}
-            {c.treatment && <Section title={t("treatmentLabel")} body={c.treatment} />}
-            {c.case_outcome && <Section title={t("caseOutcomeLabel")} body={c.case_outcome} />}
-            {c.learning_points && <Section title={t("learningPointsLabel")} body={c.learning_points} />}
-            {c.references_text && <Section title={t("referencesLabel")} body={c.references_text} />}
-          </article>
-
-          <aside className="md:col-span-1">
-            <div className="sticky top-24 rounded-2xl border border-[var(--color-border)] bg-[var(--color-subtle)]/40 p-5 text-sm">
-              <div className="text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]">
-                {t("howToCite")}
-              </div>
-              <p className="mt-2 break-words text-xs text-[var(--color-foreground)]/85">
-                {c.display_author || (c.show_author ? c.submitter_name : t("anonymousAuthor"))}.{" "}
-                "{c.title_en}". Clinical Case Library, Maytham Altaan.{" "}
-                <span dir="ltr">{new Date(c.submitted_at).getFullYear()}</span>. maytham-altaan.com/cases/{c.slug}
+        <div className="mt-8 grid gap-8 lg:grid-cols-3">
+          {/* Main column — the case information */}
+          <div className="lg:col-span-2">
+            <p className="max-w-3xl text-lg text-[var(--color-foreground)]/85">
+              {c.summary_en}
+            </p>
+            {c.summary_ar && (
+              <p dir="rtl" className="mt-3 max-w-3xl text-base text-[var(--color-foreground)]/80">
+                {c.summary_ar}
               </p>
+            )}
+
+            <div className="mt-6 border-y border-[var(--color-border)] py-4">
+              <CaseActions
+                caseId={c.id}
+                title={c.title_en}
+                initialCount={likeInfo.count}
+                initiallyLiked={likeInfo.likedByMe}
+              />
+            </div>
+
+            {/* Photo inline on mobile (sidebar hides below lg) */}
+            {imageUrl && (
+              <figure className="mt-6 overflow-hidden rounded-2xl border border-[var(--color-border)] lg:hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={imageUrl} alt={c.title_en} className="w-full" />
+              </figure>
+            )}
+
+            <article className="prose-like mt-8 space-y-8">
+              <Section title={t("presentationLabel")} body={c.presentation} />
+              {c.investigations && <Section title={t("investigationsLabel")} body={c.investigations} />}
+              {c.diagnosis && <Section title={t("diagnosisLabel")} body={c.diagnosis} />}
+              {c.treatment && <Section title={t("treatmentLabel")} body={c.treatment} />}
+              {c.case_outcome && <Section title={t("caseOutcomeLabel")} body={c.case_outcome} />}
+              {c.learning_points && <Section title={t("learningPointsLabel")} body={c.learning_points} />}
+              {c.references_text && <Section title={t("referencesLabel")} body={c.references_text} />}
+            </article>
+          </div>
+
+          {/* Right column — photo + citation */}
+          <aside className="lg:col-span-1">
+            <div className="space-y-6 lg:sticky lg:top-24">
+              {imageUrl && (
+                <figure className="hidden overflow-hidden rounded-2xl border border-[var(--color-border)] lg:block">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={imageUrl} alt={c.title_en} className="w-full" />
+                  <figcaption className="px-4 py-2 text-[11px] text-[var(--color-muted)]">
+                    {t("imageCaption")}
+                  </figcaption>
+                </figure>
+              )}
+
+              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-subtle)]/40 p-5 text-sm">
+                <div className="text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]">
+                  {t("howToCite")}
+                </div>
+                <p className="mt-2 break-words text-xs text-[var(--color-foreground)]/85">
+                  {author}. &ldquo;{c.title_en}&rdquo;. Clinical Case Library, Maytham Altaan.{" "}
+                  <span dir="ltr">{new Date(c.submitted_at).getFullYear()}</span>. maytham-altaan.com/cases/{c.slug}
+                </p>
+              </div>
             </div>
           </aside>
         </div>
