@@ -35,8 +35,21 @@ export function ContactForm() {
 
     setStatus("submitting");
     try {
-      // Placeholder: in Phase 2 this will POST to an API route that sends email.
-      await new Promise((r) => setTimeout(r, 800));
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: String(data.get("name") || ""),
+          email: String(data.get("email") || ""),
+          subject: String(data.get("subject") || ""),
+          message: String(data.get("message") || ""),
+        }),
+      });
+      const json = await res.json().catch(() => ({ ok: false }));
+      if (!res.ok || !json.ok) {
+        setStatus("error");
+        return;
+      }
       setStatus("success");
       form.reset();
     } catch {
