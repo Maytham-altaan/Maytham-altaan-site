@@ -6,6 +6,7 @@ import { VisitorsBar } from "@/components/VisitorsBar";
 import { AppsShowcase } from "@/components/AppsShowcase";
 import { YouTubeShowcase } from "@/components/YouTubeShowcase";
 import { InstagramShowcase } from "@/components/InstagramShowcase";
+import { Hero3D } from "@/components/Hero3D";
 import {
   GraduationCap,
   Sparkles,
@@ -64,8 +65,9 @@ export default async function HomePage({
           <div className="absolute -top-32 start-1/3 h-[28rem] w-[28rem] rounded-full bg-[var(--color-brand-200)]/40 blur-3xl" />
           <div className="absolute -bottom-24 end-1/4 h-[20rem] w-[20rem] rounded-full bg-[var(--color-accent-200)]/40 blur-3xl" />
         </div>
-        <Container className="py-20 md:py-28">
-          <div className="max-w-3xl">
+        <Container className="py-14 sm:py-16 md:py-24">
+          <div className="grid items-center gap-10 md:grid-cols-2 md:gap-8">
+            <div className="order-2 max-w-xl md:order-1">
             <div className="inline-flex items-center rounded-full border border-[var(--color-border)] bg-[var(--color-background)]/70 px-3 py-1 text-xs font-medium tracking-wide text-[var(--color-brand-700)] uppercase">
               {t("heroEyebrow")}
             </div>
@@ -89,6 +91,10 @@ export default async function HomePage({
               >
                 {t("heroCtaSecondary")}
               </Link>
+            </div>
+            </div>
+            <div className="order-1 md:order-2">
+              <Hero3D className="mx-auto h-[220px] w-full max-w-[440px] sm:h-[300px] md:h-[440px] md:max-w-none lg:h-[500px]" />
             </div>
           </div>
         </Container>
