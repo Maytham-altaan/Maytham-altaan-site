@@ -4,6 +4,14 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
+  // Keep the headless-Chromium packages out of the bundler — they ship native
+  // binaries and must be required at runtime on the Node server.
+  serverExternalPackages: ["@sparticuz/chromium", "puppeteer-core"],
+  // Ensure the Chromium binary is traced into the CV route's serverless bundle
+  // on Vercel (otherwise it can't be found at runtime).
+  outputFileTracingIncludes: {
+    "/api/cv/generate": ["./node_modules/@sparticuz/chromium/**"],
+  },
   async rewrites() {
     return [
       {
