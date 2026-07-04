@@ -15,6 +15,7 @@
  */
 
 import mammoth from "mammoth";
+import JSZip from "jszip";
 import { getStyle } from "./styles";
 
 // Cerebras — free tier: 1M tokens/day, no credit card, very fast, OpenAI-compatible,
@@ -38,38 +39,42 @@ export type CvHtmlResult =
 // ---------------------------------------------------------------------------
 
 /**
- * Extract clean text and (best-effort) the first raster photo from a .docx.
- * Only png/jpeg are accepted as photos; anything else (emf/wmf/svg) is skipped
- * and the CV is designed without a photo.
+ * Extract clean text (via mammoth) and the CV photo from a .docx.
+ *
+ * Finding the photo: a .docx is a ZIP, and EVERY image it contains — whether in
+ * the body, a header/footer, a floating shape, a text box, or a table cell — is
+ * stored as a file under `word/media/`. We read that folder directly and pick
+ * the LARGEST png/jpeg, which is almost always the person's photo (icons/logos
+ * are far smaller). This makes photo detection robust to wherever the photo
+ * sits in the document, instead of relying on it appearing in the body text.
  */
 export async function parseDocx(
   buffer: Buffer
 ): Promise<{ text: string; photoDataUri: string | null }> {
   let photoDataUri: string | null = null;
 
-  // Pass 1 — capture the first embedded png/jpeg (the CV photo), if any.
   try {
-    await mammoth.convertToHtml(
-      { buffer },
-      {
-        convertImage: mammoth.images.imgElement(async (image) => {
-          if (!photoDataUri) {
-            const ct = (image.contentType || "").toLowerCase();
-            if (ct === "image/png" || ct === "image/jpeg" || ct === "image/jpg") {
-              const b64 = await image.read("base64");
-              const mime = ct === "image/jpg" ? "image/jpeg" : ct;
-              photoDataUri = `data:${mime};base64,${b64}`;
-            }
-          }
-          return { src: "" }; // HTML is discarded; we only want the buffer.
-        }),
+    const zip = await JSZip.loadAsync(buffer);
+    let bestData: Buffer | null = null;
+    let bestName = "";
+    for (const [name, file] of Object.entries(zip.files)) {
+      if (file.dir) continue;
+      if (!/^word\/media\/[^/]+\.(png|jpe?g)$/i.test(name)) continue;
+      const data = (await file.async("nodebuffer")) as Buffer;
+      if (!bestData || data.length > bestData.length) {
+        bestData = data;
+        bestName = name;
       }
-    );
+    }
+    // Ignore tiny images (< ~2 KB) — those are icons/logos, not a real photo.
+    if (bestData && bestData.length >= 2048) {
+      const mime = /\.png$/i.test(bestName) ? "image/png" : "image/jpeg";
+      photoDataUri = `data:${mime};base64,${bestData.toString("base64")}`;
+    }
   } catch {
     // Photo extraction is best-effort — never fail the whole request over it.
   }
 
-  // Pass 2 — clean raw text.
   const { value } = await mammoth.extractRawText({ buffer });
   const text = value.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
 
@@ -104,7 +109,7 @@ OUTPUT RULES:
 
 function systemPrompt(hasPhoto: boolean, styleBrief: string): string {
   const photoInstruction = hasPhoto
-    ? `A professional photo IS available. Design a place for it (e.g. in the sidebar/header) and reference it EXACTLY as: <img src="${PHOTO_TOKEN}" alt="Profile photo" style="…your styling…">. Style it tastefully (e.g. a circular or rounded frame). Use the token ${PHOTO_TOKEN} verbatim as the src — it will be replaced with the real image.`
+    ? `A professional photo IS available. Design a prominent place for it (e.g. top of the sidebar, or in the header) and reference it EXACTLY as: <img src="${PHOTO_TOKEN}" alt="Profile photo" style="…">. Give the <img> a FIXED width and height (a circle or rounded square) and set object-fit: cover, so any photo fills the frame cleanly without distortion whatever its aspect ratio. Use the token ${PHOTO_TOKEN} verbatim as the src — it will be replaced with the real image.`
     : `NO photo is available. Do NOT include any <img> tag or photo placeholder; design a clean layout that doesn't need one.`;
   return SYSTEM_PROMPT.replace("%%STYLE_DIRECTION%%", styleBrief).replace(
     "%%PHOTO_INSTRUCTION%%",

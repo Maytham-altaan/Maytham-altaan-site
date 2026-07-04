@@ -88,6 +88,33 @@ export function CvStyleThumb({ p }: { p: CvStylePreview }) {
           </div>
         </div>
       )}
+
+      {p.layout === "timeline" && (
+        <div className="absolute inset-0 px-3 pt-4">
+          <div className="h-[7px] w-[55%] rounded" style={{ background: p.primary }} />
+          <div className="mt-1 h-[3px] w-[32%] rounded-full" style={{ background: p.accent }} />
+          <div className="mt-4 flex gap-2">
+            <div className="relative flex w-2 flex-col items-center pt-1">
+              <div
+                className="absolute bottom-1 top-1 w-[2px] rounded-full"
+                style={{ background: p.accent, opacity: 0.45 }}
+              />
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="z-10 mb-9 h-2 w-2 rounded-full"
+                  style={{ background: p.primary }}
+                />
+              ))}
+            </div>
+            <div className="flex-1 space-y-5 pt-0.5">
+              <Lines n={2} color={faint} />
+              <Lines n={2} color={faint} />
+              <Lines n={2} color={faint} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

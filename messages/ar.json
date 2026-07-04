@@ -462,7 +462,13 @@
       "classic": "كلاسيكي",
       "minimal": "بسيط",
       "bold": "جريء",
-      "tech": "تقني"
+      "tech": "تقني",
+      "executive": "تنفيذي",
+      "corporate": "مؤسسي",
+      "creative": "إبداعي",
+      "timeline": "زمني",
+      "compact": "مكثّف",
+      "slate": "داكن"
     }
   },
   "numbers": {

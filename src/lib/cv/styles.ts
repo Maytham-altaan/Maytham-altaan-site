@@ -13,10 +13,16 @@ export type CvStyleId =
   | "classic"
   | "minimal"
   | "bold"
-  | "tech";
+  | "tech"
+  | "executive"
+  | "corporate"
+  | "creative"
+  | "timeline"
+  | "compact"
+  | "slate";
 
 export type CvStylePreview = {
-  layout: "sidebar" | "header" | "single";
+  layout: "sidebar" | "header" | "single" | "timeline";
   paper: string;
   ink: string;
   primary: string;
@@ -114,6 +120,90 @@ export const CV_STYLES: CvStyle[] = [
       ink: "#0f172a",
       primary: "#0f172a",
       accent: "#2563eb",
+      serif: false,
+    },
+  },
+  {
+    id: "executive",
+    nameKey: "executive",
+    brief:
+      "Executive. A refined, senior-leadership résumé. Two-column with a dark charcoal/navy sidebar (#1e293b) holding the photo, contact, skills and languages, and a gold/brass accent (#b08d57). Elegant serif for the name and section titles (e.g. 'Cormorant Garamond' or 'Playfair Display' from Google Fonts) with a quiet sans for body text. Understated authority — suited to directors, consultants, and senior professionals.",
+    preview: {
+      layout: "sidebar",
+      paper: "#ffffff",
+      ink: "#1e293b",
+      primary: "#1e293b",
+      accent: "#b08d57",
+      serif: true,
+    },
+  },
+  {
+    id: "corporate",
+    nameKey: "corporate",
+    brief:
+      "Corporate. Clean, structured and conservative business résumé. A professional blue primary (#1d4ed8) on white with crisp sans-serif type (e.g. 'Inter' or 'Source Sans 3'), a full-width header band with the name/title/contact, clearly underlined section headers, and a tidy grid. Balanced and trustworthy — suited to finance, management, and administrative roles.",
+    preview: {
+      layout: "header",
+      paper: "#ffffff",
+      ink: "#111827",
+      primary: "#1d4ed8",
+      accent: "#1d4ed8",
+      serif: false,
+    },
+  },
+  {
+    id: "creative",
+    nameKey: "creative",
+    brief:
+      "Creative. Bold, colourful and artistic for design, marketing, media and startup roles. Use a vivid but tasteful palette (a purple #7c3aed primary with a coral/pink #f43f5e accent), expressive yet readable typography (e.g. 'Poppins' or 'Sora'), rounded shapes, colour-blocked sections and accent chips for skills. Expressive and memorable while staying a real, usable CV.",
+    preview: {
+      layout: "header",
+      paper: "#ffffff",
+      ink: "#1f2937",
+      primary: "#7c3aed",
+      accent: "#f43f5e",
+      serif: false,
+    },
+  },
+  {
+    id: "timeline",
+    nameKey: "timeline",
+    brief:
+      "Timeline. A modern résumé where Experience (and optionally Education) is laid out as a vertical timeline: a coloured vertical spine with a dot/marker at each role, dates aligned along it. A main column for the timeline plus a slim sidebar (or top row) for contact and skills. Clean sans-serif and one confident accent colour (teal #0d9488) for the spine and markers. Clear chronological storytelling.",
+    preview: {
+      layout: "timeline",
+      paper: "#ffffff",
+      ink: "#1f2937",
+      primary: "#0d9488",
+      accent: "#0d9488",
+      serif: false,
+    },
+  },
+  {
+    id: "compact",
+    nameKey: "compact",
+    brief:
+      "Compact. A dense, space-efficient one-page résumé for experienced candidates with a lot to include. Two columns, slightly smaller type, tight-but-readable spacing, thin rules, and efficient use of the whole A4 page. A restrained professional palette (slate/graphite #334155 with a single sky-blue accent #0ea5e9). Maximises content per page without looking cramped.",
+    preview: {
+      layout: "sidebar",
+      paper: "#ffffff",
+      ink: "#334155",
+      primary: "#334155",
+      accent: "#0ea5e9",
+      serif: false,
+    },
+  },
+  {
+    id: "slate",
+    nameKey: "slate",
+    brief:
+      "Slate. Sleek modern-dark. A dark slate header band (#0f172a) with white text and a bright accent (emerald #10b981), over a white body. Clean geometric sans (e.g. 'Inter' or 'Space Grotesk'), sharp section labels and strong contrast. Contemporary and premium — a polished modern look that suits tech-adjacent and general professional roles.",
+    preview: {
+      layout: "header",
+      paper: "#ffffff",
+      ink: "#0f172a",
+      primary: "#0f172a",
+      accent: "#10b981",
       serif: false,
     },
   },

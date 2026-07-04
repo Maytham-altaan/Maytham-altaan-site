@@ -462,7 +462,13 @@
       "classic": "Classic",
       "minimal": "Minimal",
       "bold": "Bold",
-      "tech": "Tech"
+      "tech": "Tech",
+      "executive": "Executive",
+      "corporate": "Corporate",
+      "creative": "Creative",
+      "timeline": "Timeline",
+      "compact": "Compact",
+      "slate": "Slate"
     }
   },
   "numbers": {
