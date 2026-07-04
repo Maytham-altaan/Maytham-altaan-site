@@ -443,7 +443,7 @@
     "previewTitle": "Your professional CV",
     "download": "Download PDF",
     "startOver": "Start over",
-    "privacyNote": "Your photo stays on our server and is placed directly in the PDF — it is never sent to the AI. Only your CV text is processed, by a provider that does not use it to train its models.",
+    "privacyNote": "Your photo stays on our server and is placed directly in the PDF — it is never sent to the AI. Only the text of your CV is sent to the AI service that designs it.",
     "step1Title": "Upload",
     "step1Body": "Drop in your current CV as a .docx — even a rough one with just your photo and some text.",
     "step2Title": "AI designs it",
