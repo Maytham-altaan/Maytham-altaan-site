@@ -4,23 +4,24 @@
  * 1. parseDocx: pull clean text + the first embedded photo out of a .docx.
  *    The photo is injected straight into the final HTML and is NEVER sent to
  *    the LLM — only the text is. That keeps the AI's PII surface minimal.
- * 2. generateCvHtml: the AI (Z.ai GLM-4.5-Flash — a free, OpenAI-compatible
- *    Chinese model) DESIGNS the CV — it returns a complete, self-contained,
- *    print-ready HTML/CSS document (its own colours, layout, and typography),
- *    which is then rendered to a PDF by headless Chromium (see ./pdf).
+ * 2. generateCvHtml: the AI (GLM 4.7 by Zhipu — a Chinese model — served free on
+ *    Cerebras's fast, US-hosted, OpenAI-compatible endpoint) DESIGNS the CV: it
+ *    returns a complete, self-contained, print-ready HTML/CSS document (its own
+ *    colours, layout, and typography), rendered to a PDF by headless Chromium.
  *
- * NOTE ON PRIVACY: Z.ai's free GLM tier may use submitted data to improve its
- * models, and processing happens in China. Only the CV *text* is ever sent
- * (never the photo). Disclose this in the site's privacy notice.
+ * NOTE ON PRIVACY: only the CV *text* is ever sent to the AI (never the photo);
+ * inference runs on Cerebras (US). Set CEREBRAS_API_KEY in Vercel; the model is
+ * overridable via CEREBRAS_MODEL (e.g. "gpt-oss-120b").
  */
 
 import mammoth from "mammoth";
 import { getStyle } from "./styles";
 
-// Z.ai (Zhipu GLM) international, OpenAI-compatible endpoint. GLM-4.5-Flash is
-// free (no card), strong at code/HTML, 128K context. Set ZAI_API_KEY in Vercel.
-const ZAI_URL = "https://api.z.ai/api/paas/v4/chat/completions";
-const ZAI_MODEL = "glm-4.5-flash";
+// Cerebras — free tier: 1M tokens/day, no credit card, very fast, OpenAI-compatible,
+// US-hosted. Default model is Zhipu's GLM 4.7 (a strong Chinese model, free on
+// Cerebras's public endpoint); override with CEREBRAS_MODEL (e.g. "gpt-oss-120b").
+const CEREBRAS_URL = "https://api.cerebras.ai/v1/chat/completions";
+const CEREBRAS_MODEL = process.env.CEREBRAS_MODEL || "zai-glm-4.7";
 
 /** Hard cap on the text we send to the model — keeps token cost tiny. */
 const MAX_TEXT_CHARS = 20000;
@@ -115,31 +116,30 @@ export async function generateCvHtml(
   rawText: string,
   opts: { hasPhoto: boolean; styleId?: string }
 ): Promise<CvHtmlResult> {
-  const apiKey = process.env.ZAI_API_KEY;
+  const apiKey = process.env.CEREBRAS_API_KEY;
   if (!apiKey) {
     return {
       ok: false,
       error:
-        "ZAI_API_KEY is not configured. Add your free Z.ai (GLM) API key in Vercel Project Settings → Environment Variables.",
+        "CEREBRAS_API_KEY is not configured. Add your free Cerebras API key in Vercel Project Settings → Environment Variables.",
     };
   }
 
   const text = rawText.slice(0, MAX_TEXT_CHARS);
 
   try {
-    const res = await fetch(ZAI_URL, {
+    const res = await fetch(CEREBRAS_URL, {
       method: "POST",
       headers: {
         authorization: `Bearer ${apiKey}`,
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: ZAI_MODEL,
+        model: CEREBRAS_MODEL,
         temperature: 0.6,
-        max_tokens: 6000,
-        // Turn off GLM's reasoning so it emits the HTML directly (reasoning
-        // would otherwise consume the output budget and can truncate the page).
-        thinking: { type: "disabled" },
+        // Generous headroom so any model reasoning + the full HTML both fit.
+        // Cerebras free allows 60K tokens/min and 1M/day — no tight per-minute cap.
+        max_tokens: 10000,
         messages: [
           {
             role: "system",
@@ -155,7 +155,10 @@ export async function generateCvHtml(
 
     if (!res.ok) {
       const detail = await res.text().catch(() => "");
-      return { ok: false, error: `GLM API error ${res.status}: ${detail.slice(0, 200)}` };
+      return {
+        ok: false,
+        error: `Cerebras API error ${res.status}: ${detail.slice(0, 200)}`,
+      };
     }
 
     const data = (await res.json()) as {
@@ -182,6 +185,9 @@ export async function generateCvHtml(
  */
 function sanitizeHtml(raw: string): string {
   let html = raw.trim();
+
+  // Reasoning models (GLM, gpt-oss) can emit <think>…</think> blocks — drop them.
+  html = html.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
 
   // Remove a leading ```html / ``` fence and trailing ```.
   html = html.replace(/^```[a-zA-Z]*\s*/, "").replace(/```\s*$/, "").trim();
