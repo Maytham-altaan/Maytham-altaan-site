@@ -135,7 +135,9 @@ export async function generateCvHtml(
       body: JSON.stringify({
         model: GROQ_MODEL,
         temperature: 0.6,
-        max_tokens: 8000,
+        // A one-page designed CV fits comfortably here; a smaller reservation
+        // also means more CVs fit under Groq's free-tier daily/per-minute caps.
+        max_tokens: 6000,
         messages: [
           {
             role: "system",
