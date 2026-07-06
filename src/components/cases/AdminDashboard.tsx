@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Loader2, Check, X, FileText, Eye, EyeOff, Trash2, Hash } from "lucide-react";
+import { Loader2, Check, X, FileText, Eye, EyeOff, Trash2, Hash, BadgeCheck } from "lucide-react";
 import type { CaseRow } from "@/lib/cases/types";
 
 type Action = "approve" | "reject" | "unpublish" | "delete";
@@ -47,6 +47,32 @@ export function AdminDashboard({
       });
       if (res.ok) router.refresh();
       else alert("Action failed");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function mintDoi(id: string) {
+    if (!confirm(t("adminMintDoiConfirm"))) return;
+    setBusyId(id);
+    try {
+      const res = await fetch(`/api/cases/${id}/review`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "mint_doi" }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        doi?: string;
+        message?: string;
+        error?: string;
+      };
+      if (res.ok && data.doi) {
+        alert(t("adminMintDoiSuccess", { doi: data.doi }));
+        router.refresh();
+      } else {
+        alert(data.message || data.error || "DOI minting failed");
+      }
     } finally {
       setBusyId(null);
     }
@@ -178,6 +204,16 @@ export function AdminDashboard({
                     <Eye className="h-3.5 w-3.5" />
                     {t("adminView")}
                   </Link>
+                  {!c.doi && (
+                    <button
+                      onClick={() => mintDoi(c.id)}
+                      disabled={busyId === c.id}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-brand-600)] bg-[var(--color-brand-100)] px-3 py-1.5 text-xs font-semibold text-[var(--color-brand-800)] hover:bg-[var(--color-brand-200)] disabled:opacity-60"
+                    >
+                      <BadgeCheck className="h-3.5 w-3.5" />
+                      {t("adminMintDoi")}
+                    </button>
+                  )}
                   <button
                     onClick={() => setDoi(c.id, c.doi)}
                     disabled={busyId === c.id}

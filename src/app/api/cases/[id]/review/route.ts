@@ -4,11 +4,28 @@ import {
   getSupabaseServer,
   getSupabaseAdmin,
 } from "@/lib/supabase/server";
+import { renderCasePdf } from "@/lib/cases/casePdf";
+import { mintZenodoDoi } from "@/lib/cases/zenodo";
+import type { CaseRow } from "@/lib/cases/types";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
-type ReviewAction = "approve" | "reject" | "unpublish" | "delete" | "set_doi";
-const VALID_ACTIONS: ReviewAction[] = ["approve", "reject", "unpublish", "delete", "set_doi"];
+type ReviewAction =
+  | "approve"
+  | "reject"
+  | "unpublish"
+  | "delete"
+  | "set_doi"
+  | "mint_doi";
+const VALID_ACTIONS: ReviewAction[] = [
+  "approve",
+  "reject",
+  "unpublish",
+  "delete",
+  "set_doi",
+  "mint_doi",
+];
 
 export async function POST(
   req: NextRequest,
@@ -70,6 +87,68 @@ export async function POST(
       );
     }
     return NextResponse.json({ ok: true });
+  }
+
+  // Publish the case's PDF to Zenodo and mint a real, citable DOI.
+  if (body.action === "mint_doi") {
+    const admin = getSupabaseAdmin();
+    const { data: caseRow, error: fetchErr } = await admin
+      .from("cases")
+      .select("*")
+      .eq("id", id)
+      .single();
+    if (fetchErr || !caseRow) {
+      return NextResponse.json({ ok: false, error: "case_not_found" }, { status: 404 });
+    }
+    const c = caseRow as CaseRow;
+    if (c.status !== "approved") {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "must_be_published",
+          message: "Publish the case first, then mint its DOI.",
+        },
+        { status: 400 }
+      );
+    }
+    if (c.doi) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "already_has_doi",
+          message: `This case already has a DOI (${c.doi}).`,
+          doi: c.doi,
+        },
+        { status: 400 }
+      );
+    }
+    try {
+      const pdf = await renderCasePdf(c);
+      const { doi, recordUrl } = await mintZenodoDoi(c, pdf);
+      const { error: saveErr } = await admin.from("cases").update({ doi }).eq("id", id);
+      if (saveErr) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "doi_save_failed",
+            message: `DOI ${doi} was minted but couldn't be saved: ${saveErr.message}`,
+            doi,
+            recordUrl,
+          },
+          { status: 500 }
+        );
+      }
+      return NextResponse.json({ ok: true, doi, recordUrl });
+    } catch (e) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "zenodo_failed",
+          message: e instanceof Error ? e.message : "Zenodo minting failed.",
+        },
+        { status: 502 }
+      );
+    }
   }
 
   const { data: userResp } = await supa.auth.getUser();

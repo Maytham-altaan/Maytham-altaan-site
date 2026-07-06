@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { slugify, CASE_TYPES, CASE_OUTCOMES } from "@/lib/cases/types";
+import { notifyNewCaseSubmission } from "@/lib/cases/notify";
 
 export const runtime = "nodejs";
 
@@ -176,6 +177,17 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
+
+  // Notify the reviewer by email (best-effort — never blocks the submission).
+  await notifyNewCaseSubmission({
+    title_en,
+    specialty,
+    case_type,
+    submitter_name,
+    submitter_email,
+    submitter_affiliation: get("submitter_affiliation") || null,
+    summary_en,
+  });
 
   return NextResponse.json({ ok: true, id: inserted.id, slug: inserted.slug });
 }
