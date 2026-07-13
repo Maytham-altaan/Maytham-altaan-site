@@ -308,7 +308,7 @@ async function fetchGuidelineSources(topic: string): Promise<EpmcHit[]> {
   const query = `(${topic}) AND (guideline OR "systematic review" OR consensus OR recommendations)`;
   const url =
     `https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=${encodeURIComponent(query)}` +
-    `&format=json&resultType=core&pageSize=12&sort=${encodeURIComponent("P_PDATE_D desc")}`;
+    `&format=json&resultType=core&pageSize=25&sort=${encodeURIComponent("P_PDATE_D desc")}`;
   try {
     const res = await fetch(url);
     if (!res.ok) return [];
@@ -338,9 +338,10 @@ export async function findGuidelineGaps(
   }
 
   const all = await fetchGuidelineSources(topic);
-  diag?.push(`sources=${all.length}`);
-  if (!all.length) return [];
-  const sources = all.slice(0, 8);
+  const withAbs = all.filter((h) => (h.abstractText || "").length > 120);
+  const sources = (withAbs.length ? withAbs : all).slice(0, 8);
+  diag?.push(`sources=${all.length} withAbs=${withAbs.length} used=${sources.length}`);
+  if (!sources.length) return [];
 
   const list = sources
     .map(
@@ -351,7 +352,7 @@ export async function findGuidelineGaps(
     )
     .join("\n\n");
 
-  const system = `You are a clinical evidence expert. Below are recent guideline/review sources (title + abstract) relevant to "${topic}". Using ONLY these sources, identify up to 5 genuine EVIDENCE GAPS in current clinical guidelines: areas where recommendations rest on weak/low-quality evidence (e.g. Level of Evidence C or expert opinion), are conflicting, or where the abstract itself notes limited evidence or a need for further research. Each gap MUST come from one listed source — do NOT invent gaps or sources. Return ONLY JSON: {"gaps":[{"gap":"the specific evidence gap / open question","why":"why the evidence is weak or missing, based on what the abstract says","sourceIndex":1}]}. If the abstracts show no clear gap, return {"gaps":[]}.\n\nSOURCES:\n${list}`;
+  const system = `You are a clinical evidence expert. Below are recent guideline/review sources (title + abstract) relevant to "${topic}". Identify up to 5 genuine EVIDENCE GAPS in current clinical guidelines for this topic — areas where recommendations rest on weak/low-quality evidence (Level of Evidence C, expert opinion), are conflicting, or where evidence is limited/insufficient and more research is needed. Clinical guidelines almost always contain such gaps, so surface the most important ones. Ground each gap in the abstracts below and attribute it to the single most relevant source. Do NOT fabricate specific statistics. Return ONLY JSON: {"gaps":[{"gap":"the specific evidence gap / open research question","why":"why the evidence is weak, limited, or conflicting","sourceIndex":1}]}. Return an empty list only if the sources are genuinely unrelated to "${topic}".\n\nSOURCES:\n${list}`;
 
   try {
     const res = await fetch(CEREBRAS_URL, {
