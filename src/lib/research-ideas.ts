@@ -319,16 +319,26 @@ async function fetchGuidelineSources(topic: string): Promise<EpmcHit[]> {
   }
 }
 
-export async function findGuidelineGaps(input: ResearchInput): Promise<GuidelineGap[]> {
+export async function findGuidelineGaps(
+  input: ResearchInput,
+  diag?: string[]
+): Promise<GuidelineGap[]> {
   const apiKey = process.env.CEREBRAS_API_KEY;
-  if (!apiKey) return [];
+  if (!apiKey) {
+    diag?.push("no CEREBRAS_API_KEY");
+    return [];
+  }
   const topic = [input.subspecialty, input.specialty.replace(/-/g, " ")]
     .filter(Boolean)
     .join(" ")
     .trim();
-  if (!topic) return [];
+  if (!topic) {
+    diag?.push("empty topic");
+    return [];
+  }
 
   const all = await fetchGuidelineSources(topic);
+  diag?.push(`sources=${all.length}`);
   if (!all.length) return [];
   const sources = all.slice(0, 8);
 
@@ -357,19 +367,25 @@ export async function findGuidelineGaps(input: ResearchInput): Promise<Guideline
         ],
       }),
     });
-    if (!res.ok) return [];
+    diag?.push(`glm http=${res.status}`);
+    if (!res.ok) {
+      diag?.push(`glm err: ${(await res.text().catch(() => "")).slice(0, 160)}`);
+      return [];
+    }
     const data = (await res.json()) as {
       choices?: Array<{ message?: { content?: string } }>;
     };
     const raw = (data.choices?.[0]?.message?.content ?? "")
       .replace(/<think>[\s\S]*?<\/think>/gi, "")
       .trim();
+    diag?.push(`raw len=${raw.length} head=${raw.slice(0, 140)}`);
     const start = raw.indexOf("{");
     const end = raw.lastIndexOf("}");
     if (start === -1 || end === -1) return [];
     const parsed = JSON.parse(raw.slice(start, end + 1)) as {
       gaps?: Array<{ gap?: string; why?: string; sourceIndex?: number }>;
     };
+    diag?.push(`parsedGaps=${(parsed.gaps ?? []).length}`);
     return (parsed.gaps ?? [])
       .slice(0, 5)
       .map((g) => {
@@ -381,7 +397,8 @@ export async function findGuidelineGaps(input: ResearchInput): Promise<Guideline
         };
       })
       .filter((g) => g.gap);
-  } catch {
+  } catch (e) {
+    diag?.push("exc: " + (e instanceof Error ? e.message : "?"));
     return [];
   }
 }
