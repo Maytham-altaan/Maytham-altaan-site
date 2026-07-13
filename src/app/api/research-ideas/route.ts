@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   generateResearchIdeas,
+  findGuidelineGaps,
   checkRateLimit,
   type ResearchInput,
   type StudyDesign,
@@ -74,9 +75,12 @@ export async function POST(req: NextRequest) {
     locale: (body.locale || "en").toString(),
   };
 
-  const result = await generateResearchIdeas(input);
+  const [result, gaps] = await Promise.all([
+    generateResearchIdeas(input),
+    findGuidelineGaps(input),
+  ]);
   return NextResponse.json(
-    { ...result, remaining: rl.remaining, resetAt: rl.resetAt },
+    { ...result, gaps, remaining: rl.remaining, resetAt: rl.resetAt },
     { status: result.ok ? 200 : 500 }
   );
 }

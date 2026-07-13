@@ -21,9 +21,16 @@ type Idea = {
   emerging?: boolean;
 };
 
+type Gap = {
+  gap: string;
+  why: string;
+  citation: { title: string; url: string; year?: string };
+};
+
 type Result = {
   ok: boolean;
   ideas: Idea[];
+  gaps?: Gap[];
   groundingCount: number;
   error?: string;
   message?: string;
@@ -291,6 +298,43 @@ export function ResearchIdeasForm({ locale }: { locale: string }) {
               </li>
             ))}
           </ol>
+
+          {result.gaps && result.gaps.length > 0 && (
+            <div className="mt-10">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-accent-700)]">
+                {t("gapsHeading")}
+              </h3>
+              <p className="mt-1 text-xs text-[var(--color-muted)]">{t("gapsIntro")}</p>
+              <ul className="mt-4 space-y-4">
+                {result.gaps.map((g, i) => (
+                  <li
+                    key={i}
+                    className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] p-5"
+                  >
+                    <p className="text-sm font-medium">{g.gap}</p>
+                    {g.why && (
+                      <p className="mt-1 text-sm text-[var(--color-muted)]">{g.why}</p>
+                    )}
+                    <a
+                      href={g.citation.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-flex items-start gap-1.5 text-xs font-medium text-[var(--color-brand-700)] hover:text-[var(--color-brand-800)]"
+                    >
+                      <Search className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                      <span>
+                        {g.citation.title}
+                        {g.citation.year ? ` (${g.citation.year})` : ""}
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 text-xs italic text-[var(--color-muted)]">
+                {t("gapsDisclaimer")}
+              </p>
+            </div>
+          )}
 
           <p className="mt-8 text-xs italic text-[var(--color-muted)]">
             {t("disclaimer")}

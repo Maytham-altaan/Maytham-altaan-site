@@ -386,6 +386,9 @@
     "difficultyTooltip": "1 = easy resident project · 5 = ambitious multi-center thesis",
     "searchLiterature": "Search PubMed for related work",
     "disclaimer": "AI-generated suggestions — always discuss with your supervisor and verify novelty against your specialty's literature before submitting to the FIBMS committee.",
+    "gapsHeading": "Evidence gaps in current guidelines",
+    "gapsIntro": "Where today's guidelines rest on weak or missing evidence — strong openings for a study. Each is drawn from a recent indexed source; verify against the full guideline.",
+    "gapsDisclaimer": "AI-extracted from recent guidelines and reviews — confirm each gap in the primary source before building on it.",
     "specialty": {
       "internal-medicine": "Internal Medicine",
       "cardiology": "Cardiology",

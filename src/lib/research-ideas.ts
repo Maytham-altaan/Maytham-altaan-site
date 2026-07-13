@@ -270,3 +270,111 @@ export const SPECIALTIES = [
 ] as const;
 
 export type Specialty = (typeof SPECIALTIES)[number];
+
+// ---------------------------------------------------------------------------
+// Guideline evidence gaps — grounded on Europe PMC (real, current sources),
+// synthesised by Cerebras GLM. The model only picks WHICH source a gap comes
+// from; the citation (title/link) is supplied by us, so links can't be faked.
+// ---------------------------------------------------------------------------
+
+const CEREBRAS_URL = "https://api.cerebras.ai/v1/chat/completions";
+const CEREBRAS_MODEL = process.env.CEREBRAS_MODEL || "zai-glm-4.7";
+
+export type GuidelineGap = {
+  gap: string;
+  why: string;
+  citation: { title: string; url: string; year?: string };
+};
+
+type EpmcHit = {
+  title?: string;
+  pmid?: string;
+  doi?: string;
+  id?: string;
+  source?: string;
+  journalTitle?: string;
+  pubYear?: string;
+};
+
+function epmcUrl(h: EpmcHit): string {
+  if (h.pmid) return `https://pubmed.ncbi.nlm.nih.gov/${h.pmid}/`;
+  if (h.doi) return `https://doi.org/${h.doi}`;
+  if (h.source && h.id) return `https://europepmc.org/article/${h.source}/${h.id}`;
+  return "https://europepmc.org/";
+}
+
+async function fetchGuidelineSources(topic: string): Promise<EpmcHit[]> {
+  const query = `(${topic}) AND (guideline OR "systematic review" OR consensus OR recommendations)`;
+  const url =
+    `https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=${encodeURIComponent(query)}` +
+    `&format=json&pageSize=20&sort=${encodeURIComponent("P_PDATE_D desc")}`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = (await res.json()) as { resultList?: { result?: EpmcHit[] } };
+    return (data.resultList?.result ?? []).filter((h) => h.title).slice(0, 20);
+  } catch {
+    return [];
+  }
+}
+
+export async function findGuidelineGaps(input: ResearchInput): Promise<GuidelineGap[]> {
+  const apiKey = process.env.CEREBRAS_API_KEY;
+  if (!apiKey) return [];
+  const topic = [input.subspecialty, input.specialty.replace(/-/g, " ")]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+  if (!topic) return [];
+
+  const sources = await fetchGuidelineSources(topic);
+  if (!sources.length) return [];
+
+  const list = sources
+    .map((h, i) => `[${i + 1}] ${h.title} — ${h.journalTitle || ""} (${h.pubYear || ""})`)
+    .join("\n");
+
+  const system = `You are a clinical evidence expert. Using ONLY the numbered recent guideline/review sources below, identify up to 5 genuine EVIDENCE GAPS in current clinical guidelines relevant to "${topic}": areas where recommendations rest on weak/low-quality evidence (e.g. Level of Evidence C or expert opinion), are conflicting, or where the source itself calls for further research. Each gap MUST come from one of the listed sources — do NOT invent gaps or sources. Return ONLY JSON: {"gaps":[{"gap":"the specific evidence gap / open question","why":"why the evidence is weak or missing","sourceIndex":1}]}. If the sources show no clear gap, return {"gaps":[]}.\n\nSOURCES:\n${list}`;
+
+  try {
+    const res = await fetch(CEREBRAS_URL, {
+      method: "POST",
+      headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
+      body: JSON.stringify({
+        model: CEREBRAS_MODEL,
+        temperature: 0.3,
+        max_tokens: 3000,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: `Give the evidence gaps for "${topic}" as JSON.` },
+        ],
+      }),
+    });
+    if (!res.ok) return [];
+    const data = (await res.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    const raw = (data.choices?.[0]?.message?.content ?? "")
+      .replace(/<think>[\s\S]*?<\/think>/gi, "")
+      .trim();
+    const start = raw.indexOf("{");
+    const end = raw.lastIndexOf("}");
+    if (start === -1 || end === -1) return [];
+    const parsed = JSON.parse(raw.slice(start, end + 1)) as {
+      gaps?: Array<{ gap?: string; why?: string; sourceIndex?: number }>;
+    };
+    return (parsed.gaps ?? [])
+      .slice(0, 5)
+      .map((g) => {
+        const src = sources[(g.sourceIndex ?? 1) - 1] ?? sources[0];
+        return {
+          gap: (g.gap ?? "").toString().slice(0, 500),
+          why: (g.why ?? "").toString().slice(0, 500),
+          citation: { title: (src.title ?? "").slice(0, 300), url: epmcUrl(src), year: src.pubYear },
+        };
+      })
+      .filter((g) => g.gap);
+  } catch {
+    return [];
+  }
+}
