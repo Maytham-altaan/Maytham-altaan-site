@@ -361,7 +361,7 @@ export async function findGuidelineGaps(
       body: JSON.stringify({
         model: CEREBRAS_MODEL,
         temperature: 0.3,
-        max_tokens: 4000,
+        max_tokens: 10000,
         messages: [
           { role: "system", content: system },
           { role: "user", content: `Give the evidence gaps for "${topic}" as JSON.` },
