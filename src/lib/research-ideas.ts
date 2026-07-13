@@ -277,9 +277,6 @@ export type Specialty = (typeof SPECIALTIES)[number];
 // from; the citation (title/link) is supplied by us, so links can't be faked.
 // ---------------------------------------------------------------------------
 
-const CEREBRAS_URL = "https://api.cerebras.ai/v1/chat/completions";
-const CEREBRAS_MODEL = process.env.CEREBRAS_MODEL || "zai-glm-4.7";
-
 export type GuidelineGap = {
   gap: string;
   why: string;
@@ -323,9 +320,9 @@ export async function findGuidelineGaps(
   input: ResearchInput,
   diag?: string[]
 ): Promise<GuidelineGap[]> {
-  const apiKey = process.env.CEREBRAS_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    diag?.push("no CEREBRAS_API_KEY");
+    diag?.push("no GROQ_API_KEY");
     return [];
   }
   const topic = [input.subspecialty, input.specialty.replace(/-/g, " ")]
@@ -355,13 +352,14 @@ export async function findGuidelineGaps(
   const system = `You are a clinical evidence expert. Below are recent, relevant guideline/review sources (title + abstract) for "${topic}". Using these sources together with your clinical knowledge, identify the 3-5 most important EVIDENCE GAPS in current clinical guidelines for this topic — recommendations based on weak/low-quality evidence (Level of Evidence C, expert opinion), conflicting guidance, or questions where evidence is limited and more research is needed. Attribute each gap to the single most relevant source below (by its index) as its citation. Do NOT fabricate specific statistics or claim a source says something it does not. Return ONLY JSON: {"gaps":[{"gap":"the specific evidence gap / open research question","why":"why the evidence is weak, limited, or conflicting","sourceIndex":1}]}.\n\nSOURCES:\n${list}`;
 
   try {
-    const res = await fetch(CEREBRAS_URL, {
+    const res = await fetch(GROQ_URL, {
       method: "POST",
       headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
       body: JSON.stringify({
-        model: CEREBRAS_MODEL,
+        model: GROQ_MODEL,
         temperature: 0.3,
-        max_tokens: 10000,
+        max_tokens: 2000,
+        response_format: { type: "json_object" },
         messages: [
           { role: "system", content: system },
           { role: "user", content: `Give the evidence gaps for "${topic}" as JSON.` },
