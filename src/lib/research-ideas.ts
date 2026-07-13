@@ -288,6 +288,7 @@ export type GuidelineGap = {
 
 type EpmcHit = {
   title?: string;
+  abstractText?: string;
   pmid?: string;
   doi?: string;
   id?: string;
@@ -307,7 +308,7 @@ async function fetchGuidelineSources(topic: string): Promise<EpmcHit[]> {
   const query = `(${topic}) AND (guideline OR "systematic review" OR consensus OR recommendations)`;
   const url =
     `https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=${encodeURIComponent(query)}` +
-    `&format=json&pageSize=20&sort=${encodeURIComponent("P_PDATE_D desc")}`;
+    `&format=json&resultType=core&pageSize=12&sort=${encodeURIComponent("P_PDATE_D desc")}`;
   try {
     const res = await fetch(url);
     if (!res.ok) return [];
@@ -327,14 +328,20 @@ export async function findGuidelineGaps(input: ResearchInput): Promise<Guideline
     .trim();
   if (!topic) return [];
 
-  const sources = await fetchGuidelineSources(topic);
-  if (!sources.length) return [];
+  const all = await fetchGuidelineSources(topic);
+  if (!all.length) return [];
+  const sources = all.slice(0, 8);
 
   const list = sources
-    .map((h, i) => `[${i + 1}] ${h.title} — ${h.journalTitle || ""} (${h.pubYear || ""})`)
-    .join("\n");
+    .map(
+      (h, i) =>
+        `[${i + 1}] ${h.title} (${h.pubYear || ""})\n${(h.abstractText || "No abstract.")
+          .replace(/\s+/g, " ")
+          .slice(0, 700)}`
+    )
+    .join("\n\n");
 
-  const system = `You are a clinical evidence expert. Using ONLY the numbered recent guideline/review sources below, identify up to 5 genuine EVIDENCE GAPS in current clinical guidelines relevant to "${topic}": areas where recommendations rest on weak/low-quality evidence (e.g. Level of Evidence C or expert opinion), are conflicting, or where the source itself calls for further research. Each gap MUST come from one of the listed sources — do NOT invent gaps or sources. Return ONLY JSON: {"gaps":[{"gap":"the specific evidence gap / open question","why":"why the evidence is weak or missing","sourceIndex":1}]}. If the sources show no clear gap, return {"gaps":[]}.\n\nSOURCES:\n${list}`;
+  const system = `You are a clinical evidence expert. Below are recent guideline/review sources (title + abstract) relevant to "${topic}". Using ONLY these sources, identify up to 5 genuine EVIDENCE GAPS in current clinical guidelines: areas where recommendations rest on weak/low-quality evidence (e.g. Level of Evidence C or expert opinion), are conflicting, or where the abstract itself notes limited evidence or a need for further research. Each gap MUST come from one listed source — do NOT invent gaps or sources. Return ONLY JSON: {"gaps":[{"gap":"the specific evidence gap / open question","why":"why the evidence is weak or missing, based on what the abstract says","sourceIndex":1}]}. If the abstracts show no clear gap, return {"gaps":[]}.\n\nSOURCES:\n${list}`;
 
   try {
     const res = await fetch(CEREBRAS_URL, {
@@ -343,7 +350,7 @@ export async function findGuidelineGaps(input: ResearchInput): Promise<Guideline
       body: JSON.stringify({
         model: CEREBRAS_MODEL,
         temperature: 0.3,
-        max_tokens: 3000,
+        max_tokens: 4000,
         messages: [
           { role: "system", content: system },
           { role: "user", content: `Give the evidence gaps for "${topic}" as JSON.` },
