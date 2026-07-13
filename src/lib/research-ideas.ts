@@ -316,28 +316,20 @@ async function fetchGuidelineSources(topic: string): Promise<EpmcHit[]> {
   }
 }
 
-export async function findGuidelineGaps(
-  input: ResearchInput,
-  diag?: string[]
-): Promise<GuidelineGap[]> {
+export async function findGuidelineGaps(input: ResearchInput): Promise<GuidelineGap[]> {
+  // ponytail: Groq Llama + json_object here (not GLM) — GLM 4.7's reasoning
+  // eats the token budget and truncates strict JSON; Llama returns it clean.
   const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) {
-    diag?.push("no GROQ_API_KEY");
-    return [];
-  }
+  if (!apiKey) return [];
   const topic = [input.subspecialty, input.specialty.replace(/-/g, " ")]
     .filter(Boolean)
     .join(" ")
     .trim();
-  if (!topic) {
-    diag?.push("empty topic");
-    return [];
-  }
+  if (!topic) return [];
 
   const all = await fetchGuidelineSources(topic);
   const withAbs = all.filter((h) => (h.abstractText || "").length > 120);
   const sources = (withAbs.length ? withAbs : all).slice(0, 8);
-  diag?.push(`sources=${all.length} withAbs=${withAbs.length} used=${sources.length}`);
   if (!sources.length) return [];
 
   const list = sources
@@ -366,25 +358,17 @@ export async function findGuidelineGaps(
         ],
       }),
     });
-    diag?.push(`glm http=${res.status}`);
-    if (!res.ok) {
-      diag?.push(`glm err: ${(await res.text().catch(() => "")).slice(0, 160)}`);
-      return [];
-    }
+    if (!res.ok) return [];
     const data = (await res.json()) as {
       choices?: Array<{ message?: { content?: string } }>;
     };
-    const raw = (data.choices?.[0]?.message?.content ?? "")
-      .replace(/<think>[\s\S]*?<\/think>/gi, "")
-      .trim();
-    diag?.push(`raw len=${raw.length} head=${raw.slice(0, 140)}`);
+    const raw = (data.choices?.[0]?.message?.content ?? "").trim();
     const start = raw.indexOf("{");
     const end = raw.lastIndexOf("}");
     if (start === -1 || end === -1) return [];
     const parsed = JSON.parse(raw.slice(start, end + 1)) as {
       gaps?: Array<{ gap?: string; why?: string; sourceIndex?: number }>;
     };
-    diag?.push(`parsedGaps=${(parsed.gaps ?? []).length}`);
     return (parsed.gaps ?? [])
       .slice(0, 5)
       .map((g) => {
@@ -396,8 +380,7 @@ export async function findGuidelineGaps(
         };
       })
       .filter((g) => g.gap);
-  } catch (e) {
-    diag?.push("exc: " + (e instanceof Error ? e.message : "?"));
+  } catch {
     return [];
   }
 }

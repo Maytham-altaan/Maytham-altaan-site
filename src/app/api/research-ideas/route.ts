@@ -75,13 +75,12 @@ export async function POST(req: NextRequest) {
     locale: (body.locale || "en").toString(),
   };
 
-  const diag: string[] | undefined = (body as { debug?: boolean }).debug ? [] : undefined;
   const [result, gaps] = await Promise.all([
     generateResearchIdeas(input),
-    findGuidelineGaps(input, diag),
+    findGuidelineGaps(input),
   ]);
   return NextResponse.json(
-    { ...result, gaps, _diag: diag, remaining: rl.remaining, resetAt: rl.resetAt },
+    { ...result, gaps, remaining: rl.remaining, resetAt: rl.resetAt },
     { status: result.ok ? 200 : 500 }
   );
 }
